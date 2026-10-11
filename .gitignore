@@ -1,0 +1,12 @@
+.DS_Store
+build/
+firmware/Debug/
+firmware/Release/
+firmware-f427/Debug/
+firmware-f427/Release/
+.metadata/
+.superpowers/
+*.log
+*.zip
+.tools/
+__pycache__/
