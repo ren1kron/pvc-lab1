@@ -154,7 +154,7 @@ static void morse_repeated_transmissions(void)
 static void morse_wraparound_all_timers(void)
 {
   /* Place wrap inside debounce, feedback, inactivity, pulse and gap respectively. */
-  const uint32_t offsets[] = {20, 200, 1000, 1700, 1850};
+  const uint32_t offsets[] = {20, 200, 1000, 2220, 2430};
   for (unsigned i = 0; i < sizeof offsets / sizeof offsets[0]; ++i) {
     reset_app(UINT32_MAX - offsets[i]); press(100); press(500);
     advance(1500); CHECK(Fake_Green()); advance(200); CHECK(!Fake_Green());
@@ -177,6 +177,15 @@ static void morse_ignores_press_spanning_playback_end(void)
   Fake_Button(false); tick(); advance(30);
   CHECK(Morse_GetLength() == 0 && !Fake_Red() && !Fake_Yellow());
   press(100); CHECK(Morse_GetLength() == 1 && Fake_Yellow());
+}
+static void morse_accepts_first_press_after_playback(void)
+{
+  reset_app(0); press(100); advance(1500); advance(200);
+  CHECK(Morse_GetState() == MORSE_IDLE);
+  /* Fresh edge at the very next poll, without an extra released poll to rearm. */
+  Fake_Button(true); advance(1); advance(100);
+  Fake_Button(false); tick(); advance(30);
+  CHECK(Morse_GetLength() == 1 && Fake_Yellow());
 }
 static void morse_late_poll_preserves_visible_gap(void)
 {
@@ -204,6 +213,7 @@ int main(void)
   RUN(morse_wraparound_all_timers);
   RUN(morse_ignores_playback_press);
   RUN(morse_ignores_press_spanning_playback_end);
+  RUN(morse_accepts_first_press_after_playback);
   RUN(morse_late_poll_preserves_visible_gap);
   printf("%u tests passed\n", tests);
   return 0;

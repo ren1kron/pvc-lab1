@@ -712,6 +712,11 @@
       "path": "firmware/Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_rcc_ex.c",
       "upstream": "Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_rcc_ex.c",
       "sha256": "52cea3b09a6f19497d10bd6b6f13538e611cdbe6b32e26f41c8c28e2af364e85"
+    },
+    {
+      "path": "firmware/Drivers/STM32CubeF4-LICENSE.md",
+      "upstream": "LICENSE.md",
+      "sha256": "cb230b76b9e34417a3765b647b8a873913ab7e783bcf32b8634576524cdd42dd"
     }
   ]
 }

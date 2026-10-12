@@ -50,7 +50,8 @@ void Morse_Update(uint32_t now_ms)
       if (playback_index == length) {
         length = 0;
         state = MORSE_IDLE;
-        Button_SuppressUntilReleased();
+        /* Keep a released button armed for a fresh press at the next poll. */
+        if (Button_IsActive()) Button_SuppressUntilReleased();
       }
     } else {
       LED_On(LED_GREEN);

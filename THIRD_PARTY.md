@@ -3,7 +3,7 @@
 - STM32 HAL/CMSIS and target startup/system files: ST's
   [STM32CubeF4 v1.27.1](https://github.com/STMicroelectronics/STM32CubeF4/tree/v1.27.1),
   commit `52757b5e33259a088509a777a9e3a5b971194c7d`.
-  HAL 1.8.0, CMSIS device F4 2.6.8 (see source version macros).
+  HAL 1.8.1, CMSIS device F4 2.6.8 (see source version macros).
   The subset is vendored; no download or Git submodule is needed to compile.
   [Manifest](scripts/vendor_manifest.json) records source paths and SHA-256 hashes.
   HAL retains its [BSD 3-clause license](firmware/Drivers/STM32F4xx_HAL_Driver/LICENSE.md);
