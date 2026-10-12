@@ -1,74 +1,77 @@
-# Troubleshooting and recovery
+# Устранение неполадок и восстановление
 
-Start with the symptom below. Keep the exact compiler/OpenOCD error text and
-identified MCU when seeking help. Do not change several settings at once.
+Начните с нужного симптома ниже. При обращении за помощью сохраните точный текст
+ошибки компилятора/OpenOCD и определённую модель MCU. Не меняйте несколько
+настроек одновременно.
 
-## Compilation or project import
+## Компиляция и импорт проекта
 
-| Symptom | Check and fix |
+| Симптом | Проверка и исправление |
 |---|---|
-| No project found | Select the repository root in **Existing Projects into Workspace**; hidden `.project`/`.cproject` files must have survived extraction. |
-| Red link markers in F427 | Keep `firmware` and `firmware-f427` as siblings; re-import without copying projects. The F427 sources and HAL live in `firmware`. |
-| `stm32f4xx_hal.h` missing | Confirm `firmware/Drivers` exists and compiler include paths match the supplied metadata. No external user-specific Cube repository is required. |
-| Device header/type missing | Select exactly one target symbol, `STM32F407xx` or `STM32F427xx`, with `USE_HAL_DRIVER`. Do not define both. |
-| `arm-none-eabi-gcc: command not found` | Use CubeIDE's toolchain, the installer in `scripts`, or set `CROSS_COMPILE`/PATH. Apple's `cc` builds tests, not Cortex-M firmware. |
-| Undefined Reset_Handler/vector symbols | Check correct startup `.s` and linker script; do not compile both startup files together. |
-| Duplicate main/SystemInit/SysTick | Remove newly generated duplicates; each target builds the shared Core once and its own Startup once. |
-| Flash/RAM region overflow | Check target/linker selection and buffer changes. CCM is separate memory, not contiguous with normal SRAM. |
-| Vendor unused-parameter warnings under stricter flags | Make suppresses only this warning in unchanged HAL sources. Application warnings remain errors. Do not casually edit vendored HAL. |
-| IDE asks to migrate the `.ioc` | Build the supplied source first. Keep F4 package 1.27.1; regenerate only in a reviewed copy. IDE 2.x needs separate CubeMX to view it. |
-| Program file does not exist | Build first, then select the actual Debug ELF in the launch's Main tab. Refresh Explorer; check selected configuration. |
+| Проект не найден | Выберите корень репозитория в **Existing Projects into Workspace**; скрытые `.project`/`.cproject` должны сохраниться после распаковки. |
+| Красные маркеры ссылок в F427 | Сохраните `firmware` и `firmware-f427` рядом; повторите импорт без копирования проектов. Исходники и HAL F427 находятся в `firmware`. |
+| Не найден `stm32f4xx_hal.h` | Проверьте наличие `firmware/Drivers` и соответствие include-путей готовым метаданным. Внешний пользовательский репозиторий Cube не нужен. |
+| Не найден заголовок/тип устройства | Выберите ровно один символ: `STM32F407xx` или `STM32F427xx`, вместе с `USE_HAL_DRIVER`. Не задавайте оба. |
+| `arm-none-eabi-gcc: command not found` | Используйте инструментарий CubeIDE, установщик из `scripts` или задайте `CROSS_COMPILE`/PATH. Apple `cc` собирает тесты, а не прошивку Cortex-M. |
+| Не определены Reset_Handler/символы векторов | Проверьте startup `.s` и скрипт компоновщика; не компилируйте оба startup одновременно. |
+| Дублируются main/SystemInit/SysTick | Удалите вновь сгенерированные дубликаты; каждый проект собирает общий Core и собственный Startup по одному разу. |
+| Переполнение области flash/RAM | Проверьте MCU/компоновщик и изменения буферов. CCM — отдельная память, не продолжение обычной SRAM. |
+| Предупреждения unused-parameter в коде поставщика при строгих флагах | Make подавляет только это предупреждение в неизменённых исходниках HAL. Предупреждения приложения остаются ошибками. Не правьте HAL без необходимости. |
+| IDE предлагает миграцию `.ioc` | Сначала соберите готовые исходники. Сохраните F4 1.27.1; повторную генерацию делайте только в проверяемой копии. IDE 2.x требует отдельный CubeMX для просмотра. |
+| Файл программы не существует | Сначала соберите, затем укажите реальный Debug ELF во вкладке Main конфигурации запуска. Обновите Explorer; проверьте активную конфигурацию. |
 
-## USB and OpenOCD
+## USB и OpenOCD
 
-| Symptom | Check and fix |
+| Симптом | Проверка и исправление |
 |---|---|
-| No VTGT light | Check data cable/hub/connector seating and power. Use DBG USB; ask staff about a suspected damaged board. |
-| No FTDI USB device | Check macOS System Information → USB; try a known data cable and direct adapter instead of a hub. Check macOS accessory-connection prompts. |
-| “No ST-LINK detected” | The ST-LINK GDB Server backend is wrong. Use OpenOCD with the FTDI custom script. |
-| Unknown `ftdi` adapter/command | Use an OpenOCD build with FTDI/libusb; xPack's native macOS package was checked. For old syntax use `debugger/legacy`. |
-| Cannot find `SDK11M_FT.cfg` | Use the complete `debugger` directory. Included scripts resolve the companion file relative to themselves. |
-| Cannot find `target/stm32f4x.cfg` | Keep the OpenOCD installation's scripts directory. If relocated separately, supply `-s /path/to/openocd/scripts`. |
-| LIBUSB access/busy error | Stop other debug servers, terminals or VMs using the FTDI device, then reconnect. macOS does not use Linux udev rules or Windows Zadig. Do not default to sudo or remove OS drivers. |
-| GDB port 3333 already in use | Terminate the previous server. If using an external server, disable the IDE's own server launch. |
-| JTAG scan/target examine fails | Check target power, cable, custom script and JTAG transport. Confirm `.407`/`.427` marking. Try the supplied connect-under-reset script and the normal RESET button. |
-| Colors swapped | Check physical module revision against schematic, and ensure PD14=yellow-anode/red-cathode, PD15=reverse. Do not change only one active level: both pins form a shared LED. |
+| VTGT не горит | Проверьте кабель с передачей данных, хаб, посадку разъёма и питание. Используйте DBG USB; при подозрении на повреждение платы обратитесь к сотруднику. |
+| FTDI USB не виден | Проверьте System Information → USB в macOS; попробуйте исправный кабель и прямой адаптер вместо хаба. Проверьте запросы macOS на подключение аксессуаров. |
+| “No ST-LINK detected” | Выбран неверный механизм ST-LINK GDB Server. Используйте OpenOCD с пользовательским FTDI-скриптом. |
+| Неизвестный адаптер/команда `ftdi` | Используйте OpenOCD с FTDI/libusb; нативный пакет xPack для macOS проверен. Для старого синтаксиса используйте `debugger/legacy`. |
+| Не найден `SDK11M_FT.cfg` | Используйте полный каталог `debugger`. Готовые скрипты находят соседний файл относительно себя. |
+| Не найден `target/stm32f4x.cfg` | Сохраните каталог scripts установки OpenOCD. Если он перенесён отдельно, задайте `-s /path/to/openocd/scripts`. |
+| Ошибка доступа LIBUSB/устройство занято | Остановите другие серверы отладки, терминалы или ВМ, использующие FTDI, затем переподключитесь. macOS не использует udev Linux или Zadig Windows. Не начинайте с sudo или удаления драйверов ОС. |
+| Порт GDB 3333 занят | Завершите предыдущий сервер. При внешнем сервере отключите запуск собственного сервера IDE. |
+| `Invalid ACK (6)` при программировании F427 | Используйте обновлённый `SDK1_1_M_F427 FTDBG.cfg`: он сохраняет JTAG 100 кГц в `reset-start` и `reset-init`. Одной команды `adapter speed` перед прошивкой недостаточно: стандартный обработчик снова повышает скорость. На подключённом стенде этот вариант дал `Verified OK`. |
+| Не удаётся сканирование JTAG/определение MCU | Проверьте питание, кабель, пользовательский скрипт и транспорт JTAG. Уточните маркировку `.407`/`.427`. Попробуйте готовый скрипт подключения под сбросом и обычную RESET. |
+| Цвета перепутаны | Сверьте ревизию модуля со схемой: PD14 = анод жёлтого/катод красного, PD15 — наоборот. Не меняйте активный уровень только одного вывода: оба относятся к общему LED. |
 
-On this board, FTDI channel A/interface 0 is JTAG; interface 1 is the separate
-serial channel. The official macOS workflow does not require a new USB driver.
-USB visibility confirms the adapter, not a live STM32 debug connection.
+На плате канал A/интерфейс 0 FTDI — JTAG; интерфейс 1 — отдельный последовательный
+канал. Официальная процедура macOS не требует нового USB-драйвера. Видимость USB
+подтверждает адаптер, а не живое отладочное соединение со STM32.
 
-## Program downloads but does not run
+## Программа загружается, но не работает
 
-1. Check whether execution is halted at `main` or a breakpoint. Press Resume.
-2. In historical Run mode press the board's RESET button after downloading, as
-   directed by the university manual.
-3. Verify the ELF matches the MCU. Flash sizes and vector tables are target-specific.
-4. Check normal flash boot configuration with staff if the module was previously
-   repurposed. Wrong BOOT0 may allow programming yet boot a different memory.
-5. Break in `main`, then after `SystemClock_Config`: `SystemCoreClock` should be
-   16000000. Confirm `HAL_GetTick()` advances when running. Do not expect it to
-   advance while the debugger halts the CPU.
-6. Inspect `MX_GPIO_Init`, PC15 input value and LED output latches. No input means
-   all LEDs remain off; there is no continuous heartbeat animation.
-7. If `Error_Handler` or a fault handler is reached, inspect the stack and the
-   failed initialization call. This is a fatal error state, not normal playback.
-8. Reset after experimenting with breakpoints during a press. Debug halts disrupt
-   the physical-input sampling timeline.
+1. Проверьте остановку на `main` или точке останова. Нажмите Resume.
+2. В историческом режиме Run нажмите RESET платы после загрузки, как требует
+   университетское руководство.
+3. Проверьте соответствие ELF и MCU. Размеры flash и таблицы векторов зависят от модели.
+4. Если модуль использовали иначе, уточните у сотрудника штатную загрузку из flash.
+   Неверный BOOT0 может позволять программирование, но загружать другую память.
+5. Остановитесь в `main`, затем после `SystemClock_Config`: `SystemCoreClock`
+   должен быть 16000000. Убедитесь, что `HAL_GetTick()` растёт при выполнении.
+   При остановленном отладчиком CPU он не обязан расти.
+6. Изучите `MX_GPIO_Init`, вход PC15 и выходные защёлки LED. Без ввода все
+   светодиоды выключены; непрерывной индикации работоспособности нет.
+7. При попадании в `Error_Handler` или обработчик сбоя изучите стек и неудачный
+   вызов инициализации. Это фатальное состояние, а не нормальное воспроизведение.
+8. После экспериментов с точками останова во время нажатия выполните сброс.
+   Отладочные остановки нарушают временную шкалу опроса физического ввода.
 
-## Conservative recovery sequence
+## Осторожная последовательность восстановления
 
-1. Terminate the current debug server and reconnect DBG USB.
-2. Reconfirm power, cable, correct `.407`/`.427` target and **JTAG**.
-3. Retry the modern script, which explicitly asserts SRST while connecting.
-   Legacy ST scripts use their version-specific `CONNECT_UNDER_RESET` behavior.
-4. If needed, coordinate a manual RESET-held connection with lab staff. The
-   board's nSRST line is configured from the official FTDI layout.
-5. If timing/cabling is suspected, staff may lower JTAG adapter speed; do not
-   change VID/PID, electrical layout masks or TAP IDs to hide an error.
-6. If option-byte protection or corrupted flash is suspected, stop and ask the
-   instructor/board owner. **Mass erase, readout unprotect, option-byte changes
-   and boot-jumper changes are not automatic recovery steps in this project.**
-   Some protection changes erase flash and may remove another laboratory's data.
+1. Завершите текущий сервер отладки и переподключите DBG USB.
+2. Повторно проверьте питание, кабель, правильный MCU `.407`/`.427` и **JTAG**.
+3. Повторите попытку с современным скриптом, явно активирующим SRST при подключении.
+   Старые ST-скрипты используют зависящее от версии поведение `CONNECT_UNDER_RESET`.
+4. При необходимости согласуйте подключение с удерживаемой RESET с сотрудником
+   лаборатории. Линия nSRST настроена по официальной разводке FTDI.
+5. При подозрении на время/кабель сотрудник может снизить скорость JTAG;
+   не меняйте VID/PID, электрические маски разводки или TAP ID для сокрытия ошибки.
+6. При подозрении на защиту option bytes или повреждение flash остановитесь и
+   обратитесь к преподавателю/владельцу платы. **Массовое стирание, снятие защиты
+   чтения, изменение option bytes и загрузочных перемычек не являются
+   автоматическими шагами восстановления этого проекта.** Некоторые изменения
+   защиты стирают flash и могут удалить данные другой лабораторной.
 
-No destructive recovery operation was performed during development.
+Во время разработки разрушительные операции восстановления не выполнялись.

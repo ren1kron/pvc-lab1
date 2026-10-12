@@ -1,65 +1,67 @@
-# SDK-1.1M connection and electrical setup
+# Подключение и электрическая конфигурация SDK-1.1M
 
-Use the `.407` or `.427` board supplied by the laboratory. The STM32 is on a
-replaceable processor module. Read **STM32F407VGT6** or **STM32F427VIT6** on the
-large square MCU/module label through the protective cover, or ask the instructor
-to identify it. Do not remove a powered module. The USB debugger's VID/PID does
-not identify which STM32 is installed.
+Используйте плату `.407` или `.427`, выданную в лаборатории. STM32 расположен на
+сменном процессорном модуле. Прочитайте маркировку **STM32F407VGT6** или
+**STM32F427VIT6** на большом квадратном микроконтроллере/этикетке модуля через
+защитную крышку либо попросите преподавателя определить модуль. Не снимайте модуль
+под питанием. VID/PID USB-отладчика не определяет модель установленного STM32.
 
-## Connect
+## Подключение
 
-1. Place the board flat on the bench. Use the lab's normal switch/jumper settings.
-   No peripheral-routing switches or extra connections are required for these
-   directly wired LEDs and button. The MCU must boot its internal flash (normal
-   BOOT0-low setup). If a board has been changed, ask staff to restore its normal
-   configuration; do not guess jumper positions on an unfamiliar revision.
-2. Locate **DBG USB**, connector **XS8** on the carrier, shown in the side-panel
-   view (2026 manual figure 36, printed p. 48) and front-panel drawing (figure 37).
-   Identify the printed label, not merely the connector shape.
-3. Connect the Micro-B end of a USB data cable to **DBG USB**. Connect the other
-   end through the USB-C adapter/hub to the MacBook.
-4. Check the **VTGT** indicator on the face of the board. It indicates target
-   power. This connector normally supplies the power needed for this exercise;
-   no separate 9–36 V supply is needed for the documented USB-powered setup.
-5. In macOS **System Information → USB**, check for the board's FTDI device. It
-   may appear as **Dual RS232** or **SDK 1.1M Debugger**, VID **0x0403**, PID
-   **0x6010**. Terminal alternative: `system_profiler SPUSBDataType`.
-6. Build/select the exact MCU project before starting a programming session.
+1. Положите плату ровно на стол. Используйте штатные положения переключателей и
+   перемычек лаборатории. Для напрямую подключённых светодиодов и кнопки не нужны
+   дополнительные соединения или переключение маршрутизации периферии. MCU должен
+   загружаться из внутренней flash-памяти (обычная конфигурация BOOT0 с низким
+   уровнем). Если конфигурацию платы меняли, попросите сотрудника восстановить её;
+   не подбирайте положения перемычек на незнакомой ревизии наугад.
+2. Найдите **DBG USB**, разъём **XS8** на несущей плате. Он показан на виде боковой
+   панели (рисунок 36 руководства 2026 года, печатная с. 48) и чертеже передней
+   панели (рисунок 37). Ориентируйтесь на надпись, а не только на форму разъёма.
+3. Подключите конец Micro-B USB-кабеля с передачей данных к **DBG USB**, а другой
+   конец — через USB-C адаптер/хаб к MacBook.
+4. Проверьте индикатор **VTGT** на лицевой стороне платы: он показывает наличие
+   питания целевого устройства. Для этой работы питание обычно подаётся через
+   этот разъём; отдельный источник 9–36 В для описанной схемы USB-питания не нужен.
+5. В macOS откройте **System Information → USB** и найдите FTDI-устройство платы.
+   Оно может называться **Dual RS232** или **SDK 1.1M Debugger**, VID **0x0403**,
+   PID **0x6010**. Альтернатива в терминале: `system_profiler SPUSBDataType`.
+6. До начала программирования соберите и выберите проект для точной модели MCU.
 
-The regular **USB** connector on the processor module connects to the STM32 USB
-peripheral. It is different from the carrier's **DBG USB**, which connects to the
-integrated FTDI programmer. This firmware does not implement a USB application.
-Using the regular USB connector can produce power without a working debugger.
+Обычный разъём **USB** на процессорном модуле подключён к USB-периферии STM32.
+Он отличается от **DBG USB** на несущей плате, подключённого к встроенному
+FTDI-программатору. Эта прошивка не реализует USB-приложение. Подключение обычного
+USB может дать питание, но не рабочее соединение с отладчиком.
 
-## Controls used
+## Используемые органы управления
 
-The **side panel / edge of the processor module** contains the user button and
-the green and two-color indicators (the schematic calls them SB1, VD6 “РАБОТА”
-and VD7 “РЕЖИМ”). Use this user button, not a key on the 12-key matrix.
-The separate **RESET** button on the front panel is SB13 on the carrier; it
-restarts the MCU and clears the sequence. Orientation depends on how the stand is
-placed, so use the labels and the manual's figures instead of “left/right”.
+На **боковой панели / краю процессорного модуля** расположены пользовательская
+кнопка, зелёный и двухцветный индикаторы (на схеме SB1, VD6 «РАБОТА» и VD7 «РЕЖИМ»).
+Используйте эту кнопку, а не клавишу 12-кнопочной матрицы. Отдельная кнопка
+**RESET** на передней панели — SB13 несущей платы; она перезапускает MCU и очищает
+последовательность. Ориентация зависит от положения стенда, поэтому ориентируйтесь
+на надписи и рисунки руководства, а не на «слева/справа».
 
-| Connection | Firmware setup | Behavior |
+| Соединение | Настройка в прошивке | Поведение |
 |---|---|---|
-| PC15 / nBTN | Input, no internal pull | Released high; pressed low; external R11 pull-up |
-| PD13 / GLC | Push-pull output, low speed | High = green on |
-| PD14 / YARC | Push-pull output, low speed | High with PD15 low = yellow |
-| PD15 / YCRA | Push-pull output, low speed | High with PD14 low = red |
+| PC15 / nBTN | Вход без внутренней подтяжки | Отпущена — высокий уровень; нажата — низкий; внешняя подтяжка R11 |
+| PD13 / GLC | Двухтактный выход, низкая скорость | Высокий уровень = зелёный включён |
+| PD14 / YARC | Двухтактный выход, низкая скорость | Высокий уровень при низком PD15 = жёлтый |
+| PD15 / YCRA | Двухтактный выход, низкая скорость | Высокий уровень при низком PD14 = красный |
 
-All output latches are cleared **before** enabling the output drivers. Both color
-pins low means off. `LED_On` sets the opposite color's drive low before selecting
-the desired color. Green is independent of the shared two-color LED. The schematic
-includes a bias resistor for green; a brief glow during reset is not a Morse pulse.
+Все выходные защёлки сбрасываются **до** включения выходных каскадов. Низкий уровень
+на обоих цветовых выводах выключает индикатор. `LED_On` сначала устанавливает
+низкий уровень для противоположного цвета, затем включает нужный. Зелёный
+управляется независимо от общего двухцветного светодиода. На схеме есть резистор
+смещения для зелёного; краткое свечение при сбросе не является импульсом Морзе.
 
-GPIOC and GPIOD clocks are enabled on AHB1. PC15 remains digital: MCU LSE is off.
-PA13, PA14, PA15, PB3 and PB4 retain the reset JTAG functions; no application
-driver writes these pins. The FTDI link is **JTAG**, not SWD.
+Тактирование GPIOC и GPIOD включено на AHB1. PC15 остаётся цифровым: LSE MCU
+выключен. PA13, PA14, PA15, PB3 и PB4 сохраняют функции JTAG после сброса;
+драйверы приложения не записывают в эти выводы. FTDI использует **JTAG**, а не SWD.
 
-After flashing, follow [USER_GUIDE.md](USER_GUIDE.md). Terminate the debug session
-when finished, unplug the USB cable to remove power, then detach the cable from
-the board before putting it back in its box. Do not carry the powered board to
-the instructor; demonstrate it on the bench as the course document requests.
+После прошивки следуйте [USER_GUIDE.md](USER_GUIDE.md). По окончании завершите
+отладочный сеанс, отключите USB для снятия питания, затем отсоедините кабель от
+платы перед укладкой в коробку. Не переносите плату под питанием к преподавателю;
+демонстрируйте её на столе, как требует учебный документ.
 
-Sources: supplied 2026 manual chapter 3 and sections 4.1–4.2; the
-[official schematic, pp. 2–3](https://github.com/lmtspbru/SDK-1.1M/blob/master/SDK1.1M.pdf).
+Источники: выданное руководство 2026 года, глава 3 и разделы 4.1–4.2;
+[официальная схема, с. 2–3](https://github.com/lmtspbru/SDK-1.1M/blob/master/SDK1.1M.pdf).

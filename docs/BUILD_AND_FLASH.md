@@ -1,45 +1,44 @@
-# Build, download and debug
+# Сборка, загрузка и отладка
 
-Prerequisites: follow [INSTALLATION.md](INSTALLATION.md) and identify the board
-with [HARDWARE_SETUP.md](HARDWARE_SETUP.md). Keep both project directories and the
-shared source tree in their original relative locations. Import existing projects;
-do not reconstruct them in a new-project wizard.
+Предварительно выполните [INSTALLATION.md](INSTALLATION.md) и определите плату по
+[HARDWARE_SETUP.md](HARDWARE_SETUP.md). Сохраните исходное взаимное расположение
+обоих каталогов проектов и общих исходников. Импортируйте существующие проекты;
+не пересоздавайте их через мастер нового проекта.
 
-## Build in STM32CubeIDE
+## Сборка в STM32CubeIDE
 
-1. In Project Explorer, select **Lab1_F407** or **Lab1_F427** according to the chip.
-2. Right-click → **Build Configurations → Set Active → Debug** (or use the
-   equivalent Project menu). The supplied launch configuration expects Debug.
-3. Check **Properties → C/C++ Build → Settings**:
+1. В Project Explorer выберите **Lab1_F407** или **Lab1_F427** по модели чипа.
+2. Правой кнопкой → **Build Configurations → Set Active → Debug** (либо аналогичный
+   пункт меню Project). Готовая конфигурация запуска рассчитана на Debug.
+3. Проверьте **Properties → C/C++ Build → Settings**:
 
-   | Setting | F407 | F427 |
+   | Параметр | F407 | F427 |
    |---|---|---|
    | MCU | STM32F407VGTx | STM32F427VITx |
-   | Device preprocessor symbol | STM32F407xx | STM32F427xx |
-   | Startup | startup_stm32f407xx.s | startup_stm32f427xx.s |
-   | Linker | STM32F407VGTX_FLASH.ld | STM32F427VITX_FLASH.ld |
-   | Core / FPU / ABI | Cortex-M4 / FPv4-SP-D16 / hard | Same |
+   | Символ препроцессора устройства | STM32F407xx | STM32F427xx |
+   | Файл запуска | startup_stm32f407xx.s | startup_stm32f427xx.s |
+   | Скрипт компоновщика | STM32F407VGTX_FLASH.ld | STM32F427VITX_FLASH.ld |
+   | Ядро / FPU / ABI | Cortex-M4 / FPv4-SP-D16 / hard | То же |
 
-4. Select **Project → Clean…**, select this project and clean if switching
-   configuration/toolchain or resolving stale build files. Normal edits only need
-   an incremental build. Then select **Project → Build Project** or the hammer.
-5. Read the **Console** and **Problems** views. Success means the compiler/linker
-   finish without errors and produce the project's ELF, not merely that an editor
-   has no red underlines. A displayed text/data/bss size summary confirms linking.
-6. Locate **Debug/Lab1_F407.elf** inside `firmware`, or
-   **Debug/Lab1_F427.elf** inside `firmware-f427`. Refresh Project Explorer with F5
-   if the generated folder is not yet visible.
-7. **Release** is also supplied. If debugging Release, explicitly select that ELF
-   and build configuration in the launch settings. Optimized stepping can skip
-   source lines; use Debug for the first demonstration.
+4. При смене конфигурации/инструментария или устаревших файлах сборки выберите
+   **Project → Clean…** и очистите этот проект. Обычным правкам достаточно
+   инкрементальной сборки. Затем выберите **Project → Build Project** или значок молотка.
+5. Изучите **Console** и **Problems**. Успех означает завершение компиляции и
+   компоновки без ошибок и создание ELF проекта, а не только отсутствие красных
+   подчёркиваний в редакторе. Сводка размеров text/data/bss подтверждает компоновку.
+6. Найдите **Debug/Lab1_F407.elf** в `firmware` или **Debug/Lab1_F427.elf** в
+   `firmware-f427`. Если созданная папка пока не видна, обновите Project Explorer клавишей F5.
+7. Конфигурация **Release** также включена. Для её отладки явно выберите этот ELF
+   и конфигурацию сборки в настройках запуска. При оптимизации пошаговая отладка
+   может пропускать строки; для первой демонстрации используйте Debug.
 
-The shared source folders appear linked in F427. Copying just `firmware-f427/` to
-another location breaks them; move/clone the whole repository. There are no
-machine-specific absolute paths in the checked-in project metadata.
+Общие папки исходников в F427 представлены ссылками. Копирование одного
+`firmware-f427/` в другое место нарушит их; переносите/клонируйте весь репозиторий.
+В сохранённых метаданных проектов нет абсолютных путей конкретного компьютера.
 
-### Terminal build
+### Сборка в терминале
 
-From the repository root, with ARM GCC on PATH:
+Из корня репозитория при наличии ARM GCC в PATH:
 
 ```sh
 make test
@@ -51,20 +50,21 @@ python3 scripts/check_elf.py F407 build/F407/Debug/Lab1_F407.elf
 python3 scripts/check_elf.py F427 build/F427/Debug/Lab1_F427.elf
 ```
 
-Choose the one target you need for normal work. `make clean` removes only the
-root `build/` directory, not CubeIDE's Debug/Release folders. Make creates ELF,
-BIN, HEX and a linker MAP. Use ELF for debugging and the provided flash helper.
+Для обычной работы выберите один нужный MCU. `make clean` удаляет только корневой
+каталог `build/`, а не папки Debug/Release CubeIDE. Make создаёт ELF, BIN, HEX и
+MAP компоновщика. Для отладки и готового скрипта прошивки используйте ELF.
 
-An explicit compiler prefix works without changing PATH:
+Явный префикс компилятора работает без изменения PATH:
 
 ```sh
 make firmware MCU=F407 CROSS_COMPILE="/your/arm-toolchain/bin/arm-none-eabi-"
 ```
 
-Use a toolchain installation path without spaces for this Makefile's executable
-prefix. Source repository paths with spaces are checked by the relocation test.
-CubeIDE can also be run with Eclipse's headless builder. This example is a
-documented workflow, **not a GUI/headless IDE run performed in this environment**:
+Для префикса исполняемых файлов в этом Makefile используйте путь установки
+инструментария без пробелов. Пути репозитория с пробелами проверены тестом переноса.
+CubeIDE также можно запускать через сборщик Eclipse без графического интерфейса.
+Headless-импорт и Debug-сборка F427 проверены в CubeIDE 2.2.0 12 октября 2026 года.
+Для примера F407 используется та же процедура:
 
 ```sh
 IDE_BIN="/Applications/STM32CubeIDE.app/Contents/MacOS/STM32CubeIDE"
@@ -73,123 +73,144 @@ IDE_BIN="/Applications/STM32CubeIDE.app/Contents/MacOS/STM32CubeIDE"
   -import "$PWD/firmware" -build "Lab1_F407/Debug"
 ```
 
-Set `IDE_BIN` to the actual executable in your installed application bundle. Quit
-any other IDE instance using that workspace. For F427, import `firmware-f427`
-and build `Lab1_F427/Debug` instead. The portable Make build is the verified
-terminal path if the IDE's headless launcher differs on your version.
+Задайте `IDE_BIN` как реальный путь к исполняемому файлу установленного приложения.
+Закройте другие экземпляры IDE, использующие этот workspace. Для F427 импортируйте
+`firmware-f427` и собирайте `Lab1_F427/Debug`. Переносимая Make-сборка — проверенный
+вариант для терминала, если headless-запуск вашей версии IDE устроен иначе.
 
-## Select the FTDI debugger configuration
+## Выбор конфигурации FTDI-отладчика
 
-The board's programmer is an **FTDI USB/JTAG** device. It is not an onboard ST-LINK.
-The university's historical CubeIDE menu label **ST-LINK (OpenOCD)** describes the
-IDE backend used to launch OpenOCD with a custom script. **ST-LINK GDB Server**
-is a different backend and will not communicate with this board.
+Программатор платы — **FTDI USB/JTAG**, а не встроенный ST-LINK. Историческое
+название меню CubeIDE **ST-LINK (OpenOCD)** обозначает механизм IDE для запуска
+OpenOCD с пользовательским скриптом. **ST-LINK GDB Server** — другой механизм,
+который не сможет работать с этой платой.
 
-The shared launch files are already included:
+Общие файлы запуска уже включены:
 
 - `firmware/Lab1_F407 FTDI Debug.launch`
 - `firmware-f427/Lab1_F427 FTDI Debug.launch`
 
-Before the first download:
+Перед первой загрузкой:
 
-1. Plug into **DBG USB** and check **VTGT**. Close any serial terminal, competing
-   debug session or VM that has captured the FTDI USB device.
-2. Open **Run → Debug Configurations… → STM32 C/C++ Application** (historically
-   **STM32 Cortex-M C/C++ Application**). Select the matching **Lab1_Fxxx FTDI Debug**.
-   If not listed, refresh/import the project and open its `.launch` file. If
-   necessary create this launch type with **New** and use the fields below.
-3. In **Main**, select the correct project and **Search Project…** for its newly
-   built Debug ELF. Do this after compiling so the file exists.
-4. In **Debugger**, select **ST-LINK (OpenOCD)** in the historical probe/backend
-   list. Select **JTAG**, not SWD, if that field remains enabled.
-5. Choose **Configuration Script → User Defined**. Select the script:
+1. Подключитесь к **DBG USB** и проверьте **VTGT**. Закройте последовательные
+   терминалы, конкурирующие отладочные сеансы или ВМ, захватившие FTDI USB.
+2. Откройте **Run → Debug Configurations… → STM32 C/C++ Application** (ранее
+   **STM32 Cortex-M C/C++ Application**). Выберите нужную **Lab1_Fxxx FTDI Debug**.
+   Если её нет в списке, обновите/импортируйте проект и откройте `.launch`.
+   При необходимости создайте конфигурацию этого типа через **New** с полями ниже.
+3. На вкладке **Main** выберите правильный проект и через **Search Project…**
+   найдите только что собранный Debug ELF. Делайте это после компиляции, когда файл существует.
+4. На вкладке **Debugger** выберите **ST-LINK (OpenOCD)** в историческом списке
+   адаптеров/механизмов запуска. Если поле доступно, выберите **JTAG**, а не SWD.
+5. Выберите **Configuration Script → User Defined** и скрипт:
 
-   | Physical MCU | Current OpenOCD script |
+   | Физический MCU | Современный скрипт OpenOCD |
    |---|---|
    | STM32F407VGT6 | `debugger/SDK1_1_M FTDBG.cfg` |
    | STM32F427VIT6 | `debugger/SDK1_1_M_F427 FTDBG.cfg` |
 
-   The scripts automatically locate `SDK11M_FT.cfg` next to themselves. Do not
-   select only that interface file: the target script is also needed. A warning
-   that CubeIDE cannot interpret a custom script is expected in the manual's
-   workflow; inspect the OpenOCD console to distinguish a real Tcl error.
-6. The included launch resolves the script relative to the project. If your IDE
-   does not expand that field, use **Browse** to the script in your local clone.
-   This is a per-installation GUI adjustment, not a source-code change.
-7. Choose reset/connection **Connect under reset**, when offered. Modern scripts
-   explicitly configure it; older ST versions may use `CONNECT_UNDER_RESET`.
-   For the original 1.9.0-era spelling, select the matching script under
-   `debugger/legacy/` instead. See [research notes](RESEARCH.md) for the difference.
-8. In **Startup**, enable loading the executable and symbols, and **break at main**.
-   Keep SWV disabled. Save with **Apply**. The supplied launch uses GDB port 3333.
-9. If the IDE's OpenOCD reports “adapter driver ftdi not found”, select an
-   FTDI-enabled external executable or use the external-server route below.
+   Скрипты автоматически находят `SDK11M_FT.cfg` рядом с собой. Не выбирайте только
+   этот интерфейсный файл: нужен и скрипт MCU. Предупреждение, что CubeIDE не может
+   интерпретировать пользовательский скрипт, ожидаемо в процедуре руководства;
+   изучите консоль OpenOCD, чтобы отличить его от реальной ошибки Tcl.
+6. Готовая конфигурация находит скрипт относительно проекта. Если IDE не раскрывает
+   это поле, укажите скрипт в локальном клоне через **Browse**. Это настройка GUI
+   конкретной установки, а не изменение исходников.
+7. Если предлагается, выберите **Connect under reset**. Современные скрипты
+   настраивают это явно; старые версии ST могут использовать `CONNECT_UNDER_RESET`.
+   Для исходного синтаксиса времён 1.9.0 выберите соответствующий скрипт в
+   `debugger/legacy/`. Различия описаны в [заметках исследования](RESEARCH.md).
+8. На вкладке **Startup** включите загрузку исполняемого файла и символов, а также
+   **break at main**. SWV оставьте выключенным. Сохраните через **Apply**.
+   Готовая конфигурация использует порт GDB 3333.
+9. Если OpenOCD из IDE сообщает “adapter driver ftdi not found”, выберите внешний
+   исполняемый файл с FTDI или используйте внешний сервер, как описано ниже.
 
-## Download and run
+## Загрузка и запуск
 
-1. Press **Debug**. The first launch may offer to switch to the Debug perspective;
-   accept it. The IDE builds, starts OpenOCD, connects GDB and downloads the ELF.
-2. Inspect the Console for successful target examination, programming and verify
-   messages. An OpenOCD process starting is not sufficient evidence of programming.
-3. If stopped at `main`, the application has not initialized yet. Press **Resume**
-   (green play/F8 in the usual keymap). The application turns its LEDs off, then
-   waits for user input.
-4. Enter dot-dash-dot using [USER_GUIDE.md](USER_GUIDE.md). The green playback
-   demonstrates firmware execution after programming.
-5. To restart during a session, use the debug **Reset/Restart** action, or suspend
-   and issue `monitor reset halt` in the GDB console, then Resume. To restart
-   independently, press the board's front-panel **RESET** button.
-6. If using **Run → Run** with the historical IDE, the manual says to press the
-   physical RESET button after the download to begin execution.
-7. Set a breakpoint by double-clicking the editor gutter next to a line in
-   `Morse_Update` (for example where `state = MORSE_PLAYBACK`). Resume to hit it,
-   then inspect `length`, `playback_index`, `sequence`, and `state`. Step Over is
-   normally F6. Use only a few breakpoints: hardware breakpoint slots are limited.
-8. Remove/disable breakpoints and Resume before demonstrating timings. A stopped
-   CPU cannot poll the button normally; single-step observations are not timing
-   measurements. Reset after an interrupted input sequence if necessary.
-9. Terminate the debug session with the red square. This ends the debugger; it may
-   leave firmware running. Unplug DBG USB to power down safely, then store the
-   detached cable and board.
+1. Нажмите **Debug**. При первом запуске согласитесь на переход в перспективу
+   Debug, если IDE предложит. IDE собирает проект, запускает OpenOCD, подключает
+   GDB и загружает ELF.
+2. В Console проверьте сообщения об успешном определении MCU, программировании и
+   проверке. Сам по себе запуск процесса OpenOCD не подтверждает программирование.
+3. При остановке на `main` приложение ещё не инициализировано. Нажмите **Resume**
+   (зелёный значок запуска/F8 в обычной раскладке). Приложение выключит светодиоды
+   и будет ждать ввода пользователя.
+4. Введите точка–тире–точка по [USER_GUIDE.md](USER_GUIDE.md). Зелёное воспроизведение
+   демонстрирует выполнение прошивки после программирования.
+5. Для перезапуска во время сеанса используйте отладочное действие **Reset/Restart**
+   либо приостановите выполнение, введите `monitor reset halt` в консоли GDB,
+   затем Resume. Для независимого перезапуска нажмите **RESET** на передней панели.
+6. При использовании **Run → Run** в исторической IDE руководство требует нажать
+   физическую RESET после загрузки, чтобы начать выполнение.
+7. Установите точку останова двойным щелчком на поле редактора рядом со строкой
+   `Morse_Update` (например, где `state = MORSE_PLAYBACK`). Нажмите Resume, чтобы
+   дойти до неё, затем изучите `length`, `playback_index`, `sequence` и `state`.
+   Step Over обычно назначен на F6. Используйте немного точек: аппаратных слотов мало.
+8. Перед демонстрацией времени удалите/отключите точки останова и нажмите Resume.
+   Остановленный CPU не может нормально опрашивать кнопку; пошаговая отладка не
+   является измерением времени. При необходимости сбросьте прерванную последовательность.
+9. Завершите сеанс красным квадратом. Отладчик завершится, но прошивка может
+   продолжить работу. Отключите DBG USB для безопасного снятия питания, затем
+   уберите отсоединённый кабель и плату.
 
-## External OpenOCD: verified alternative when IDE menus differ
+## Внешний OpenOCD: проверенная альтернатива при других меню IDE
 
-An FTDI-enabled OpenOCD was verified for script parsing on this Mac. No board was
-connected, so the following physical operations remain to be performed in the lab.
+На этом Mac через xPack OpenOCD 0.12.0-7 успешно запрограммирован и проверен
+стенд F427. Копия инструмента установлена в `.tools/xpack-openocd-0.12.0-7`.
+Для повторной прошивки F427 из корня репозитория:
 
-For a normal one-command terminal flash after the matching Make build:
+```sh
+export OPENOCD="$PWD/.tools/xpack-openocd-0.12.0-7/bin/openocd"
+python3 scripts/flash.py F427
+```
+
+Конфигурация `Lab1_F427 FTDI Debug.launch` указывает на этот OpenOCD и локальный
+GDB из `.tools/arm-gnu-toolchain-14.2.rel1-darwin-arm64-arm-none-eabi`.
+В уже открытой CubeIDE обновите проект через **Refresh** (F5), затем выберите
+**Run → Debug Configurations… → Lab1_F427 FTDI Debug → Debug**. После остановки
+на `main` нажмите **Resume** (F8). GUI-запуск этой конфигурации ещё не проверялся;
+Debug ELF уже создан headless-сборщиком в `firmware-f427/Debug`.
+
+Для проверенного F427 скрипт сохраняет JTAG на 100 кГц, включая `reset-start`
+и `reset-init`. Стандартный `stm32f4x.cfg` повышал частоту при программировании,
+что приводило к `Invalid ACK (6)`; установка скорости только до сброса не помогала.
+Обработчик `reset-init` оставляет MCU на HSI 16 МГц, без ускорения через PLL.
+
+Для обычной прошивки одной командой после Make-сборки нужного MCU:
 
 ```sh
 python3 scripts/flash.py F407 --dry-run
 python3 scripts/flash.py F407
 ```
 
-Use `F427` for that chip, or `--config Release` for a Release build. The helper
-passes an absolute ELF filename as a quoted Tcl word, then requests **program,
-verify, reset and exit**. A nonzero process result is a programming failure.
-Ordinary programming erases the necessary flash sectors. It does not invoke
-chip unlock, option-byte changes or mass-erase recovery.
+Для соответствующего чипа используйте `F427`, для Release — `--config Release`.
+Скрипт передаёт абсолютное имя ELF как Tcl-слово в кавычках, затем запрашивает
+**программирование, проверку, сброс и выход**. Ненулевой код завершения означает
+ошибку программирования. При обычной прошивке стираются необходимые секторы flash.
+Разблокировка чипа, изменение option bytes и восстановление массовым стиранием
+не выполняются.
 
-For an external debug server, run in Terminal from the repository root:
+Для внешнего отладочного сервера выполните в терминале из корня репозитория:
 
 ```sh
 openocd -f "debugger/SDK1_1_M FTDBG.cfg"
-# For F427 use debugger/SDK1_1_M_F427 FTDBG.cfg instead.
+# Для F427 используйте debugger/SDK1_1_M_F427 FTDBG.cfg.
 ```
 
-Keep it running. In CubeIDE's OpenOCD launch, **disable starting the server**
-(“Start local GDB server” / “Start server” in versions that expose it), select
-remote host `localhost`, port `3333`, and the matching ELF. Then launch GDB from
-the IDE. There must be one server for this board, not one from Terminal and
-another started automatically by CubeIDE.
+Оставьте процесс работающим. В конфигурации OpenOCD CubeIDE **отключите запуск
+сервера** (“Start local GDB server” / “Start server”, если есть в вашей версии),
+выберите удалённый хост `localhost`, порт `3333` и нужный ELF. Затем запустите GDB
+из IDE. Для платы должен работать один сервер, а не одновременно сервер терминала
+и автоматически запущенный CubeIDE.
 
-Standalone GDB also works with a compatible GDB installed by the IDE/toolchain:
+Можно использовать отдельный совместимый GDB из IDE/инструментария:
 
 ```sh
 arm-none-eabi-gdb build/F407/Debug/Lab1_F407.elf
 ```
 
-At the GDB prompt:
+В приглашении GDB:
 
 ```text
 target extended-remote localhost:3333
@@ -200,24 +221,24 @@ break main
 continue
 ```
 
-Continue again after reaching `main`. `load` writes the target flash; do not run
-it against an unidentified board. Exit GDB with `disconnect` and `quit`, then
-stop the Terminal OpenOCD server with Ctrl-C.
+После достижения `main` продолжите выполнение ещё раз. `load` записывает flash
+MCU; не выполняйте эту команду на неопределённой плате. Завершите GDB командами
+`disconnect` и `quit`, затем остановите OpenOCD в терминале через Ctrl-C.
 
-## Editing and regeneration
+## Редактирование и повторная генерация
 
-LED/button/Morse logic is in separate files. Calls in `main.c` are inside CubeMX
-`USER CODE` regions. Both `.ioc` files enable **Keep User Code** and disable
-deleting previous files. The two targets share hardware initialization because
-their chosen pins and 16 MHz configuration are identical.
+Логика светодиодов, кнопки и Морзе находится в отдельных файлах. Вызовы в `main.c`
+размещены в областях CubeMX `USER CODE`. Оба `.ioc` включают **Keep User Code** и
+отключают удаление прежних файлов. Два MCU используют общую аппаратную
+инициализацию, поскольку выбранные выводы и настройка 16 МГц одинаковы.
 
-Compilation requires no regeneration. Before intentionally regenerating, commit
-your edits and use a temporary copy of the whole repository. Set firmware pack
-1.27.1, select generation of peripheral `.c/.h` pairs and JTAG five-pin debug.
-CubeMX may rewrite **project metadata, startup location, linker scripts and
-syscall templates**, and may not preserve the F427 project's Eclipse links. Review
-the resulting diff; retain this repository's target linker/startup selection,
-relative links and custom module files. Re-run `make test`, both ARM builds and
-`make audit`. Do not generate one MCU's configuration over the other MCU project.
+Для компиляции повторная генерация не нужна. Перед намеренной генерацией
+зафиксируйте изменения и используйте временную копию всего репозитория. Выберите
+пакет 1.27.1, генерацию пар `.c/.h` периферии и пятилинейную отладку JTAG. CubeMX
+может переписать **метаданные проекта, расположение startup, скрипты компоновщика
+и шаблоны системных вызовов**, а также не сохранить Eclipse-ссылки проекта F427.
+Просмотрите diff; сохраните выбор linker/startup этого репозитория, относительные
+ссылки и пользовательские модули. Повторите `make test`, обе ARM-сборки и
+`make audit`. Не генерируйте конфигурацию одного MCU поверх проекта другого.
 
-Common errors and recovery steps are in [TROUBLESHOOTING.md](TROUBLESHOOTING.md).
+Типовые ошибки и восстановление описаны в [TROUBLESHOOTING.md](TROUBLESHOOTING.md).

@@ -1,128 +1,127 @@
-# Installation on an Apple Silicon Mac
+# Установка на Mac с Apple Silicon
 
-This guide starts with an M1 Pro MacBook and no STM32 software. It leads to the
-provided projects; you do **not** need to create a new STM32 project by hand.
+Руководство рассчитано на MacBook с M1 Pro без установленного ПО STM32. Оно ведёт
+к готовым проектам; создавать новый STM32-проект вручную **не нужно**.
 
-## A. Equipment
+## A. Оборудование
 
-1. Borrow the **SDK-1.1M** with a `.407` or `.427` processor module from the lab.
-2. Use its **USB 2.0 Micro-B data cable**. A charging-only cable will power a board
-   but cannot communicate. A USB-A cable requires a working USB-C adapter/hub on
-   the MacBook; a USB-C-to-Micro-B data cable is another option.
-3. The board already contains the microcontroller module, LEDs, button, voltage
-   regulators and FTDI USB programmer/debugger. You do not need an external
-   ST-LINK, breadboard, LED resistors or button wires for this laboratory.
-4. Install STM32CubeIDE; optionally install standalone CubeMX for `.ioc` viewing
-   in IDE 2.x, and OpenOCD if the IDE's bundled OpenOCD lacks FTDI support.
-5. Terminal tests also need Apple's C command-line tools and Python 3. Firmware
-   builds need an ARM compiler, supplied by CubeIDE or the optional installer below.
+1. Возьмите в лаборатории **SDK-1.1M** с процессорным модулем `.407` или `.427`.
+2. Используйте **USB 2.0 Micro-B кабель с передачей данных**. Кабель только для
+   зарядки может питать плату, но не передавать данные. Кабелю USB-A нужен рабочий
+   USB-C адаптер/хаб для MacBook; другой вариант — кабель USB-C–Micro-B с передачей данных.
+3. Плата уже содержит MCU-модуль, светодиоды, кнопку, стабилизаторы напряжения и
+   FTDI USB-программатор/отладчик. Для этой лабораторной не нужны внешний ST-LINK,
+   макетная плата, резисторы светодиодов или провода кнопки.
+4. Установите STM32CubeIDE; при необходимости — отдельный CubeMX для просмотра
+   `.ioc` в IDE 2.x и OpenOCD, если встроенный в IDE OpenOCD не поддерживает FTDI.
+5. Для терминальных тестов нужны также инструменты командной строки Apple для C
+   и Python 3. Для прошивки нужен ARM-компилятор из CubeIDE или установщика ниже.
 
-## B. Select the IDE version deliberately
+## B. Осознанный выбор версии IDE
 
-The actual development host was **arm64, macOS 26.2 (Tahoe)**. No CubeIDE GUI was
-installed here, so import, graphical configuration and physical flashing remain
-unverified. The independently compiled firmware does not depend on the GUI.
+Фактический компьютер разработки: **arm64, macOS 26.2 (Tahoe)**. Первоначально
+проект собирался отдельным ARM GCC. Позднее, 12 октября 2026 года, установлены
+CubeIDE 2.2.0 и CubeMX 6.18, проверена headless-сборка F427 и выполнена физическая
+прошивка через внешний OpenOCD. GUI-запуск отладочного сеанса ещё не проверялся.
 
-| Choice | Architecture / compatibility | How `.ioc` opens |
+| Вариант | Архитектура / совместимость | Открытие `.ioc` |
 |---|---|---|
-| Recommended for this host: CubeIDE 2.2.0 Apple Silicon installer | Native ARM64 installer is offered; ST lists macOS 26 support | Separate STM32CubeMX |
-| Course-aligned historical CubeIDE 1.9.0 | Intel build; Rosetta 2 required on M1; macOS 26.2 operation not verified | Integrated CubeMX 6.5 |
-| Other CubeIDE 1.x | Check that release's supported macOS and architecture | Usually integrated CubeMX |
+| Рекомендуется для этого компьютера: CubeIDE 2.2.0, установщик Apple Silicon | Есть нативный ARM64-установщик; ST указывает поддержку macOS 26 | Отдельный STM32CubeMX |
+| Историческая CubeIDE 1.9.0 по материалам курса | Intel-сборка; на M1 нужна Rosetta 2; работа на macOS 26.2 не проверена | Встроенный CubeMX 6.5 |
+| Другие CubeIDE 1.x | Проверяйте macOS и архитектуру, поддерживаемые конкретным выпуском | Обычно встроенный CubeMX |
 
-The current platform facts are from ST's [download page](https://www.st.com/en/development-tools/stm32cubeide.html)
-and [release notes](https://www.st.com/resource/en/release_note/rn0114-stm32cubeide-release-v200-stmicroelectronics.pdf).
-Keep the STM32CubeF4 package at 1.27.1 even if the IDE is newer. A newer editor/compiler does not change
-the PCB wiring, Cortex-M4 architecture, project target or FTDI hardware.
+Сведения о платформах взяты со [страницы загрузки ST](https://www.st.com/en/development-tools/stm32cubeide.html)
+и из [примечаний к выпуску](https://www.st.com/resource/en/release_note/rn0114-stm32cubeide-release-v200-stmicroelectronics.pdf).
+Сохраните пакет STM32CubeF4 версии 1.27.1 даже с более новой IDE. Новый редактор или
+компилятор не меняет разводку платы, архитектуру Cortex-M4, целевой MCU или FTDI.
 
-### Install CubeIDE
+### Установка CubeIDE
 
-1. Open the official [STM32CubeIDE page](https://www.st.com/en/development-tools/stm32cubeide.html).
-   Choose **Get Software**. An ST account, sign-in or email confirmation may be
-   required. Choose the **macOS Apple Silicon** package (listed as
-   `STM32CubeIDE-McA`), not the Intel or Windows installer.
-2. Download the installer for the selected release. Open the downloaded archive
-   if necessary, then open its disk image/installer and follow its installation
-   prompts and license terms. Install the application in Applications or the
-   location the ST installer offers. Administrative prompts belong to this
-   normal installation; this project does not require security-policy changes.
-3. Start STM32CubeIDE from Finder/Applications. If macOS asks whether to open a
-   downloaded application, verify it came from ST and use the normal Open action.
-   For a blocked signed download, consult **System Settings → Privacy & Security**.
-   Do not disable Gatekeeper globally.
-4. If deliberately installing the historical **Intel** version, macOS normally
-   offers to install Rosetta when first launching it. Follow that Apple prompt.
-   See [Apple's Rosetta instructions](https://support.apple.com/en-us/102527) and
-   [ST's installation guide](https://www.st.com/resource/en/user_manual/um2563-stm32cubeide-installation-guide-stmicroelectronics.pdf).
-   The native Apple Silicon IDE does not require Rosetta for its main executable;
-   a separately installed Intel-only tool may still request it.
-5. In the workspace selection dialog, choose a new directory such as
-   `~/STM32CubeIDE/workspace-lab1`. Keep it separate from the repository.
-   Workspace settings/caches are not firmware source files.
-6. Confirm the workbench opens. Open **Help → About STM32CubeIDE** to check the
-   version. If the old IDE cannot launch on this macOS, use the current native
-   package instead; Windows is not required by the board or this project.
+1. Откройте официальную [страницу STM32CubeIDE](https://www.st.com/en/development-tools/stm32cubeide.html).
+   Выберите **Get Software**. Могут потребоваться учётная запись ST, вход или
+   подтверждение email. Выберите пакет **macOS Apple Silicon** (`STM32CubeIDE-McA`),
+   а не установщик Intel или Windows.
+2. Скачайте установщик выбранного выпуска. При необходимости откройте архив,
+   затем образ диска/установщик и следуйте запросам установки и условиям лицензии.
+   Установите приложение в Applications или предложенное место. Запросы прав
+   администратора относятся к обычной установке; менять политики безопасности не нужно.
+3. Запустите STM32CubeIDE из Finder/Applications. Если macOS спрашивает об открытии
+   скачанного приложения, проверьте источник ST и используйте обычное действие Open.
+   Если подписанная загрузка заблокирована, откройте **System Settings → Privacy & Security**.
+   Не отключайте Gatekeeper глобально.
+4. Если намеренно выбрана историческая версия **Intel**, macOS обычно предлагает
+   установить Rosetta при первом запуске. Следуйте этому диалогу Apple.
+   См. [инструкции Apple по Rosetta](https://support.apple.com/en-us/102527) и
+   [руководство установки ST](https://www.st.com/resource/en/user_manual/um2563-stm32cubeide-installation-guide-stmicroelectronics.pdf).
+   Основному исполняемому файлу нативной Apple Silicon IDE Rosetta не нужна;
+   отдельно установленный Intel-инструмент всё же может её запросить.
+5. В диалоге workspace выберите новый каталог, например
+   `~/STM32CubeIDE/workspace-lab1`, отдельно от репозитория. Настройки и кэши
+   workspace не являются исходниками прошивки.
+6. Убедитесь, что рабочее окно открылось. Версию проверьте в **Help → About STM32CubeIDE**.
+   Если старая IDE не запускается на этой macOS, используйте нативный пакет;
+   Windows для этой платы и проекта не требуется.
 
-The course's split-volume 1.9.0 macOS download links are in the supplied Autumn
-2026 DOCX. Download both parts before opening the first with a compatible archive
-program. They are a course distribution route, not proof of Tahoe compatibility.
+Ссылки курса на многотомную загрузку macOS-версии 1.9.0 находятся в выданном DOCX
+за осень 2026 года. Скачайте обе части перед открытием первой совместимым
+архиватором. Это способ распространения курса, а не доказательство совместимости с Tahoe.
 
-### Install the STM32F4 package when using CubeMX
+### Установка пакета STM32F4 для CubeMX
 
-The repository already contains every HAL/CMSIS file needed to **compile**.
-Installing the full package is needed for viewing/regenerating configurations
-with CubeMX, not for an offline Make build.
+Репозиторий уже содержит все HAL/CMSIS-файлы для **компиляции**. Полный пакет нужен
+для просмотра/повторной генерации конфигураций CubeMX, а не для автономной Make-сборки.
 
-1. With CubeIDE 1.x, open **Help → Manage Embedded Software Packages**. With 2.x,
-   install [standalone STM32CubeMX](https://www.st.com/en/development-tools/stm32cubemx.html)
-   and use its embedded-package manager. CubeMX is separate beginning with IDE
-   2.0, as explained in [ST's release announcement](https://community.st.com/stm32cubeide-mcus-28/stm32cubeide-2-0-0-released-159542).
-2. Find **STM32F4**, show available/older versions, and select **1.27.1**. The
-   official package page is [STM32CubeF4](https://www.st.com/en/embedded-software/stm32cubef4.html).
-   Do not silently migrate to the latest pack when opening the supplied `.ioc`.
-3. For the course's offline procedure, obtain **1.27.0 base** and **1.27.1 patch**
-   ZIP files from its DOCX links or ST's available versions. Use **From Local…**
-   to install the base, then the patch. The course specifically says to copy the
-   unopened base ZIP into the configured firmware repository before installing
-   the patch. Create that directory if necessary. On macOS it is commonly under
-   `~/STM32Cube/Repository`; use the actual path shown by your installation.
-4. Check the installed package list and the `.ioc` field
+1. В CubeIDE 1.x откройте **Help → Manage Embedded Software Packages**. Для 2.x
+   установите [отдельный STM32CubeMX](https://www.st.com/en/development-tools/stm32cubemx.html)
+   и используйте его менеджер пакетов. CubeMX отделён от IDE начиная с 2.0, как
+   поясняет [объявление ST](https://community.st.com/stm32cubeide-mcus-28/stm32cubeide-2-0-0-released-159542).
+2. Найдите **STM32F4**, покажите доступные/старые версии и выберите **1.27.1**.
+   Официальная страница пакета — [STM32CubeF4](https://www.st.com/en/embedded-software/stm32cubef4.html).
+   Не переходите незаметно на последний пакет при открытии готового `.ioc`.
+3. Для автономной процедуры курса получите ZIP **базовой версии 1.27.0** и
+   **патча 1.27.1** по ссылкам DOCX или из доступных версий ST. Через **From Local…**
+   установите сначала базу, затем патч. Курс отдельно требует скопировать
+   нераспакованный базовый ZIP в настроенный репозиторий прошивок перед установкой
+   патча. Создайте каталог при необходимости. На macOS он часто расположен в
+   `~/STM32Cube/Repository`; используйте фактический путь своей установки.
+4. Проверьте список установленных пакетов и поле `.ioc`
    `ProjectManager.FirmwarePackage=STM32Cube FW_F4 V1.27.1`.
-5. If ST's updater is unreachable, the course recommends offline mode. In the
-   1.x Preferences (on macOS often **STM32CubeIDE → Preferences/Settings**), open
-   **STM32Cube → Firmware Updater**, select **Off Line Mode**, **Manual Check**,
-   and **No Auto-Refresh at Application start**. Menu placement differs by version.
-6. No generation is needed for this delivery. If an old pack cannot be installed
-   on a new CubeMX, compile the checked-in source and inspect the `.ioc` as text;
-   follow the regeneration notes before attempting an upgrade.
+5. Если обновляющий сервис ST недоступен, курс рекомендует автономный режим.
+   В Preferences версии 1.x (на macOS часто **STM32CubeIDE → Preferences/Settings**)
+   откройте **STM32Cube → Firmware Updater**, выберите **Off Line Mode**,
+   **Manual Check** и **No Auto-Refresh at Application start**. Меню зависят от версии.
+6. Для готового проекта генерация не нужна. Если старый пакет нельзя установить
+   в новый CubeMX, компилируйте сохранённые исходники и изучайте `.ioc` как текст;
+   перед обновлением прочитайте замечания о повторной генерации.
 
-### FTDI debugger support
+### Поддержка FTDI-отладчика
 
-The official SDK repository states that **macOS needs no separate driver install**.
-OpenOCD's FTDI backend uses libusb; neither Zadig/WinUSB nor a Windows FTDI setup
-belongs on macOS. ST-LINK server software cannot substitute for the FTDI backend.
+Официальный репозиторий SDK указывает, что **на macOS отдельный драйвер не нужен**.
+FTDI-модуль OpenOCD использует libusb; Zadig/WinUSB и настройка FTDI для Windows
+к macOS не относятся. Сервер ST-LINK не заменяет FTDI-модуль.
 
-1. Try the IDE-provided OpenOCD using the supplied user-defined script.
-2. If it reports that the `ftdi` adapter is unavailable, use an FTDI-enabled
-   OpenOCD. The native [xPack OpenOCD 0.12.0-7 release](https://github.com/xpack-dev-tools/openocd-xpack/releases/tag/v0.12.0-7)
-   was executed in this environment and parsed our scripts. Its direct
-   [macOS arm64 archive](https://github.com/xpack-dev-tools/openocd-xpack/releases/download/v0.12.0-7/xpack-openocd-0.12.0-7-darwin-arm64.tar.gz)
-   is available without needing to build OpenOCD. Download/extract it to a tools
-   directory and run its `bin/openocd --version`. Keep its bundled libraries and
-   scripts beside the executable.
-3. Set the IDE OpenOCD executable path, or use the external-server instructions in
-   [BUILD_AND_FLASH.md](BUILD_AND_FLASH.md). For the terminal helper:
+1. Попробуйте OpenOCD из IDE с готовым пользовательским скриптом.
+2. Если адаптер `ftdi` недоступен, используйте OpenOCD с FTDI. Нативный
+   [xPack OpenOCD 0.12.0-7](https://github.com/xpack-dev-tools/openocd-xpack/releases/tag/v0.12.0-7)
+   запускался в этом окружении и разбирал наши скрипты. Прямой
+   [архив macOS arm64](https://github.com/xpack-dev-tools/openocd-xpack/releases/download/v0.12.0-7/xpack-openocd-0.12.0-7-darwin-arm64.tar.gz)
+   доступен без самостоятельной сборки OpenOCD. Скачайте/распакуйте его в каталог
+   инструментов и выполните `bin/openocd --version`. Сохраните комплектные
+   библиотеки и скрипты рядом с исполняемым файлом.
+3. Укажите исполняемый файл OpenOCD в IDE или используйте инструкции внешнего
+   сервера из [BUILD_AND_FLASH.md](BUILD_AND_FLASH.md). Для терминального скрипта:
    `export OPENOCD="/your/tools/xpack-openocd-0.12.0-7/bin/openocd"`.
-4. Do not install or unload kernel extensions preemptively. If the USB interface
-   is already claimed, close the program holding it and reconnect first.
+4. Не устанавливайте и не выгружайте расширения ядра заранее. Если USB-интерфейс
+   уже занят, сначала закройте удерживающую его программу и переподключите плату.
 
-## C. Install terminal tools (optional for IDE builds)
+## C. Установка терминальных инструментов (необязательна для сборки в IDE)
 
-1. Open Terminal and run `xcode-select -p` and `cc --version`. If developer tools
-   are absent, run `xcode-select --install` and finish Apple's dialog.
-2. Check `make --version` and `python3 --version`. If Python 3 is absent, install
-   it from [python.org's macOS downloads](https://www.python.org/downloads/macos/).
-   Tests themselves are C; Python runs repository/ELF audits and the flash helper.
-3. From the repository root, run:
+1. В терминале выполните `xcode-select -p` и `cc --version`. Если средств разработки
+   нет, выполните `xcode-select --install` и завершите диалог Apple.
+2. Проверьте `make --version` и `python3 --version`. Если Python 3 отсутствует,
+   установите его со [страницы загрузки Python для macOS](https://www.python.org/downloads/macos/).
+   Сами тесты написаны на C; Python выполняет аудит репозитория/ELF и скрипт прошивки.
+3. Из корня репозитория выполните:
 
    ```sh
    sh scripts/install_toolchain_macos.sh
@@ -132,33 +131,32 @@ belongs on macOS. ST-LINK server software cannot substitute for the FTDI backend
    make firmware MCU=F407 CONFIG=Debug
    ```
 
-   The installer downloads Arm's native **14.2.Rel1** archive, checks its pinned
-   SHA-256 and extracts only inside `.tools/`. It does not alter system PATH;
-   repeat the `export` in each new shell. The same archive/compiler was used for
-   the verified builds. Arm's [official toolchain page](https://developer.arm.com/downloads/-/arm-gnu-toolchain-downloads)
-   also provides other host builds. CubeIDE's bundled compiler is an alternative;
-   set `CROSS_COMPILE` to its `arm-none-eabi-` executable prefix.
+   Установщик скачивает нативный архив Arm **14.2.Rel1**, проверяет закреплённый
+   SHA-256 и распаковывает только в `.tools/`. Системный PATH не меняется;
+   повторяйте `export` в каждой новой оболочке. Этот архив/компилятор использован
+   для проверенных сборок. [Официальная страница Arm](https://developer.arm.com/downloads/-/arm-gnu-toolchain-downloads)
+   содержит сборки для других компьютеров. Альтернатива — компилятор CubeIDE;
+   задайте `CROSS_COMPILE` как его префикс исполняемых файлов `arm-none-eabi-`.
 
-## D. Get and import this repository
+## D. Получение и импорт репозитория
 
-1. Clone the supplied bundle as described in [README](../README.md), or extract
-   the supplied repository archive. Use a normal writable directory. Avoid
-   putting it inside a cloud-synchronized workspace during a debug session.
-2. Launch CubeIDE and select the workspace created above.
-3. Use **File → Import → General → Existing Projects into Workspace → Next**.
-4. Choose **Select root directory** and browse to the repository's root.
-5. Select **Lab1_F407** for a `.407`, or **Lab1_F427** for a `.427`. You may import
-   both for comparison. Leave **Copy projects into workspace** unchecked.
-6. Finish. The common Core and Drivers directories appear as linked folders in
-   F427. If they have red error markers, verify the two project directories are
-   still siblings in the original repository layout.
-7. In **Project → Properties → C/C++ Build → Settings → MCU Settings**, check
-   `STM32F407VGTx` or `STM32F427VITx`. In compiler defined symbols, confirm
-   `USE_HAL_DRIVER` and the matching `STM32F407xx`/`STM32F427xx`.
-8. Open the project's `.ioc`. In 1.x this uses integrated CubeMX; in 2.x open it
-   in the separately installed CubeMX. If asked to migrate/generate, keep the
-   original configuration for initial validation. Inspect PC15 input, PD13–15
-   outputs, **SYS → Debug → JTAG (5 pins)**, HSI 16 MHz, and **LSE disabled**.
-9. Inspect `Core/Inc/app_config.h` and build with the steps in
-   [BUILD_AND_FLASH.md](BUILD_AND_FLASH.md). Only after a successful build proceed
-   to the [board connection guide](HARDWARE_SETUP.md).
+1. Клонируйте выданный bundle по [README](../README.md) либо распакуйте архив
+   репозитория. Используйте обычный доступный для записи каталог. Во время отладки
+   избегайте workspace с облачной синхронизацией.
+2. Запустите CubeIDE и выберите созданный ранее workspace.
+3. Откройте **File → Import → General → Existing Projects into Workspace → Next**.
+4. Выберите **Select root directory** и укажите корень репозитория.
+5. Для `.407` выберите **Lab1_F407**, для `.427` — **Lab1_F427**. Можно импортировать
+   оба для сравнения. **Copy projects into workspace** оставьте выключенным.
+6. Завершите импорт. Общие Core и Drivers в F427 отображаются как связанные папки.
+   При красных маркерах ошибок проверьте, что каталоги обоих проектов остались
+   рядом в исходной структуре репозитория.
+7. В **Project → Properties → C/C++ Build → Settings → MCU Settings** проверьте
+   `STM32F407VGTx` или `STM32F427VITx`. В символах компилятора должны быть
+   `USE_HAL_DRIVER` и соответствующий `STM32F407xx`/`STM32F427xx`.
+8. Откройте `.ioc` проекта. В 1.x используется встроенный CubeMX, в 2.x — отдельно
+   установленный. При предложении миграции/генерации сохраните исходную конфигурацию
+   для первой проверки. Проверьте PC15 как вход, PD13–15 как выходы,
+   **SYS → Debug → JTAG (5 pins)**, HSI 16 МГц и **выключенный LSE**.
+9. Изучите `Core/Inc/app_config.h` и соберите по [BUILD_AND_FLASH.md](BUILD_AND_FLASH.md).
+   Только после успешной сборки переходите к [подключению платы](HARDWARE_SETUP.md).

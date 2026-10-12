@@ -1,109 +1,116 @@
-# Verification report
+# Отчёт о проверке
 
-Verification date: **12 October 2026**. Host: Apple Silicon arm64, macOS 26.2,
-Apple Clang 17.0.0. ARM compiler: native Arm GNU **14.2.Rel1**, GCC 14.2.1
-20241119. Dependencies: STM32CubeF4 **1.27.1**, HAL 1.8.1, CMSIS F4 2.6.8.
+Дата проверки: **12 октября 2026 года**. Компьютер: Apple Silicon arm64, macOS 26.2,
+Apple Clang 17.0.0. ARM-компилятор: нативный Arm GNU **14.2.Rel1**, GCC 14.2.1
+20241119. Зависимости: STM32CubeF4 **1.27.1**, HAL 1.8.1, CMSIS F4 2.6.8.
 
-**The firmware has not been flashed or run on a physical SDK-1.1M.** No suitable
-USB debugger was available. CubeIDE was not installed on this host, so its GUI
-import/build/launch and opening the `.ioc` in CubeMX remain unexecuted. Project
-metadata follows the official SDK example, with static consistency checks; the
-complete independent ARM GCC builds below were actually performed.
+**12 октября 2026 года прошивка F427 загружена, проверена и запущена на SDK-1.1M.**
+FTDI/JTAG определил `DBGMCU_IDCODE = 0x20016419` и flash 2048 КиБ. OpenOCD сообщил
+`Verified OK`; проверены работа основного цикла, HSI 16 МГц и рост `uwTick`.
+Пользователь подтвердил жёлтое подтверждение короткого нажатия и последующий зелёный
+импульс. Подробности и оставшиеся проверки — в
+[HARDWARE_VALIDATION.md](HARDWARE_VALIDATION.md).
 
-## Executed build and test results
+Установлены CubeIDE 2.2.0 и CubeMX 6.18. Импорт и Debug-сборка F427 через
+headless-сборщик CubeIDE завершились без ошибок и предупреждений; GUI-запуск
+отладочного сеанса не проверялся. Таблицы ниже описывают первоначальные
+Make-сборки и нативные тесты; дополнительный ELF CubeIDE занимает 7308 Б во flash
+и прошёл проверку векторов, стека и диапазонов памяти.
 
-All four builds succeeded. Make compiles application and HAL with
-`-Wall -Wextra -Werror` (vendor-only unused-parameter suppression for an ST source
-function). No compiler/linker warnings were emitted in the final build logs.
-Every build produces target-specific `.elf`, `.bin`, `.hex` and `.map` files.
+## Выполненные сборки и тесты
 
-| Target | Configuration | Flash load | Normal SRAM including 2 KiB stack reserve | Available flash / SRAM |
+Все четыре сборки успешны. Make компилирует приложение и HAL с
+`-Wall -Wextra -Werror` (для одной функции исходника ST подавлено только
+unused-parameter). В окончательных журналах предупреждений компилятора/компоновщика
+нет. Каждая сборка создаёт файлы `.elf`, `.bin`, `.hex` и `.map` для своего MCU.
+
+| Целевой MCU | Конфигурация | Загрузка во flash | Обычная SRAM с резервом стека 2 КиБ | Доступно flash / SRAM |
 |---|---|---:|---:|---|
-| STM32F407VGT6 | Debug, `-Og` | 5,452 B | 2,144 B | 1,048,576 / 131,072 B |
-| STM32F407VGT6 | Release, `-Os` | 4,984 B | 2,144 B | 1,048,576 / 131,072 B |
-| STM32F427VIT6 | Debug, `-Og` | 5,516 B | 2,144 B | 2,097,152 / 196,608 B |
-| STM32F427VIT6 | Release, `-Os` | 5,044 B | 2,144 B | 2,097,152 / 196,608 B |
+| STM32F407VGT6 | Debug, `-Og` | 5 452 Б | 2 144 Б | 1 048 576 / 131 072 Б |
+| STM32F407VGT6 | Release, `-Os` | 4 984 Б | 2 144 Б | 1 048 576 / 131 072 Б |
+| STM32F427VIT6 | Debug, `-Og` | 5 516 Б | 2 144 Б | 2 097 152 / 196 608 Б |
+| STM32F427VIT6 | Release, `-Os` | 5 044 Б | 2 144 Б | 2 097 152 / 196 608 Б |
 
-These are linker load/region sizes, not ELF file sizes (which contain debug
-information). GNU `size` includes flash-resident init/fini arrays in its data
-column, so adding that column to bss is not an exact normal-SRAM calculation.
-The normal SRAM allocation includes 96 B for static storage/alignment plus the
-2,048 B reservation. CCM/backup RAM are unused. No claim about measured maximum
-hardware stack depth is made.
+Это размеры загрузки/областей по компоновщику, а не ELF-файлов, содержащих также
+отладочную информацию. GNU `size` включает размещённые во flash массивы init/fini
+в столбец data, поэтому сумма этого столбца и bss не является точным размером
+обычной SRAM. Выделение обычной SRAM включает 96 Б статических данных/выравнивания
+и резерв 2 048 Б. CCM/резервная RAM не используются. Измеренная максимальная
+глубина аппаратного стека не заявляется.
 
-| Check | Observed result |
+| Проверка | Наблюдаемый результат |
 |---|---|
-| `make test` | 18 application/driver tests and 7 GPIO model groups passed |
-| `make test-sanitize` | Same 18 + 7 passed with AddressSanitizer and UndefinedBehaviorSanitizer; no findings |
-| `make test-capacity64` | All 18 application/driver tests passed with capacity 64 |
-| `make simulate` | Dot-dash-dot trace generated; all 6 green edges and feedback colors matched assertions |
-| ARM cross-compilation | Both MCUs, Debug and Release succeeded |
-| ELF validation | All four: correct ARM vectors, reset entry, stack top and memory ranges |
-| `make audit` | 143 vendor-file hashes and both projects' metadata/path/source/documentation checks passed |
-| Modern FTDI scripts | Both targets parsed in native xPack OpenOCD 0.12.0-7; effective connect-under-reset flags checked |
-| Historical FTDI scripts | Both parsed in that OpenOCD; expected deprecated-spelling notices, no parsing errors |
-| Flash helper | Both targets passed `--dry-run`; no flash command executed against hardware |
-| Relocated clean source | Full offline verification, including four fresh builds, passed from a different directory containing spaces |
-| Local compiler installer | Cached official archive checksum, extraction into `.tools`, and native GCC execution passed |
+| `make test` | Пройдены 18 тестов приложения/драйверов и 7 групп модели GPIO |
+| `make test-sanitize` | Те же 18 + 7 пройдены с AddressSanitizer и UndefinedBehaviorSanitizer; проблем нет |
+| `make test-capacity64` | Все 18 тестов приложения/драйверов пройдены с ёмкостью 64 |
+| `make simulate` | Сгенерирована трасса точка–тире–точка; все 6 переходов зелёного и цвета подтверждения совпали с проверками |
+| Кросс-компиляция ARM | Успешны Debug и Release обоих MCU |
+| Проверка ELF | Для всех четырёх корректны ARM-векторы, точка входа сброса, вершина стека и диапазоны памяти |
+| `make audit` | Пройдены проверки 143 хешей файлов поставщика, метаданных/путей/исходников/документации обоих проектов |
+| Современные FTDI-скрипты | Оба MCU: разбор нативным xPack OpenOCD 0.12.0-7; проверены действующие флаги подключения под сбросом |
+| Исторические FTDI-скрипты | Оба разобраны тем же OpenOCD; ожидаемые сообщения об устаревшем синтаксисе, без ошибок разбора |
+| Скрипт прошивки | Оба MCU прошли `--dry-run`; F427 позднее запрограммирован и проверен напрямую через OpenOCD |
+| Перенесённые чистые исходники | Полная автономная проверка, включая четыре свежие сборки, пройдена из другого каталога с пробелами |
+| Локальный установщик компилятора | Пройдены проверка суммы кэшированного официального архива, распаковка в `.tools` и запуск нативного GCC |
 
-The compiler archive was downloaded from Arm's official server and independently
-used before testing the installer's cached-archive path. No global compiler or
-macOS security setting was changed. Build/tool outputs are excluded from Git.
+Архив компилятора скачан с официального сервера Arm и независимо использован до
+проверки сценария установщика с кэшированным архивом. Глобальный компилятор и
+настройки безопасности macOS не менялись. Результаты сборки/инструментов исключены из Git.
 
-## Coverage of the requested behavior
+## Покрытие требуемого поведения
 
-The host tests compile the real LED/button/Morse sources. A fake HAL supplies
-electrical input and records outputs; tests advance `uint32_t` milliseconds
-explicitly. They do not wait for real time and require no physical board.
+Тесты на компьютере компилируют реальные исходники LED, кнопки и Морзе. Подмена HAL
+задаёт электрический вход и регистрирует выходы; тесты явно продвигают время
+`uint32_t` в миллисекундах. Они не ждут реального времени и не требуют платы.
 
-| Requirement / edge case | Test evidence |
+| Требование / граничный случай | Подтверждение тестами |
 |---|---|
-| Dot/dash classification | Short press; 399 ms dot and exactly 400 ms dash boundary |
-| Correct feedback color | Actual driver PD14/PD15 truth table plus Morse feedback assertions |
-| Debounce / one event | Bouncing press/release, sub-debounce glitches, repeated event consumption |
-| Press duration / startup | Debounce timing, held-at-boot suppression, cancellation/rearm |
-| Sequence order | Dot-dash-dot pulse order and transition boundaries |
-| End of input | Empty input, last-release timeout, held button, candidate press just before timeout |
-| Pulses and visible pauses | Exact 200/600 ms pulses, 200 ms gaps, delayed-poll gap preservation |
-| State transitions | IDLE → INPUT → PLAYBACK → IDLE, one playback only, repeated transmissions |
-| Static capacity | Overflow retains first entries; no out-of-bounds access under sanitizers |
-| Tick rollover | Button duration plus feedback, timeout, pulse and gap timers across wrap |
-| Input during playback | Completed presses discarded; held-across-end ignored; immediate fresh press accepted |
-| GPIO exercise | Reset modes, pulls, IDR/ODR, BSRR priority, open drain, analog, AF, contention, lock/reset |
+| Классификация точки/тире | Короткое нажатие; точка 399 мс и граница тире ровно 400 мс |
+| Верный цвет подтверждения | Таблица истинности PD14/PD15 реального драйвера и проверки подтверждения Морзе |
+| Дребезг / одно событие | Дребезг нажатия/отпускания, короткие помехи, повторное получение события |
+| Длительность / запуск | Время подавления дребезга, подавление удержания при старте, отмена/возобновление |
+| Порядок последовательности | Порядок импульсов точка–тире–точка и границы переходов |
+| Конец ввода | Пустой ввод, тайм-аут от последнего отпускания, удержание, предварительное нажатие перед тайм-аутом |
+| Импульсы и видимые паузы | Точные импульсы 200/600 мс, паузы 200 мс, сохранение паузы при запоздалом опросе |
+| Переходы состояний | IDLE → INPUT → PLAYBACK → IDLE, однократность воспроизведения, повторные передачи |
+| Статическая ёмкость | Переполнение сохраняет первые записи; выходов за границы под санитайзерами нет |
+| Переполнение тиков | Длительность кнопки, подтверждение, тайм-аут, импульсы и паузы через переполнение |
+| Ввод при воспроизведении | Завершённые нажатия отбрасываются; удержание через окончание игнорируется; немедленное новое нажатие принимается |
+| Упражнение GPIO | Режимы после сброса, подтяжки, IDR/ODR, приоритет BSRR, открытый сток, аналоговый режим, AF, конфликт, блокировка/сброс |
 
-A separate firmware review identified a rearming corner case at the end of
-playback. A regression test first reproduced the discarded fresh press; the
-corrected implementation passes it. The review also identified the need to use
-stock OpenOCD's explicit under-reset flags rather than relying solely on ST's
-`CONNECT_UNDER_RESET` variable. The modern scripts include that correction.
+Отдельное ревью прошивки выявило граничный случай возобновления приёма ввода после
+воспроизведения. Регрессионный тест сначала воспроизвёл отбрасывание нового
+нажатия; исправленная реализация проходит его. Ревью также выявило необходимость
+явных флагов подключения под сбросом стандартного OpenOCD вместо опоры только на
+переменную ST `CONNECT_UNDER_RESET`. Современные скрипты включают это исправление.
 
-## Reproduce the complete offline check
+## Повтор полной автономной проверки
 
-With ARM GCC on PATH, run from the repository root:
+При наличии ARM GCC в PATH выполните из корня репозитория:
 
 ```sh
 sh scripts/verify.sh
 ```
 
-An explicit `CROSS_COMPILE` environment prefix can select another installation.
-Set `OPENOCD` to an executable path to include modern script parsing. That script
-uses `noinit; shutdown`: it does not connect to USB or program anything.
+Явный префикс в переменной окружения `CROSS_COMPILE` позволяет выбрать другую
+установку. Укажите исполняемый файл в `OPENOCD`, чтобы включить разбор современных
+скриптов. Этот сценарий использует `noinit; shutdown`: не подключается к USB и
+ничего не программирует.
 
-The static audit checks required files, pinned vendor hashes, two project names,
-Debug/Release device defines and includes, startup/linker selections, relative
-Eclipse links, `.ioc` GPIO/JTAG/clock/package fields, launch script resolution,
-absence of runtime delays/loops in custom drivers/application, and local
-documentation links. This is a consistency check, not a substitute for running
-CubeIDE itself. `check_elf.py` inspects ARM ELF headers, flash/SRAM load ranges,
-vector-table sizes, reset entry and initial stack pointer.
+Статический аудит проверяет обязательные файлы, закреплённые хеши поставщика,
+имена двух проектов, определения устройств и include-пути Debug/Release, выбор
+startup/linker, относительные Eclipse-ссылки, поля GPIO/JTAG/тактирования/пакета
+`.ioc`, поиск скрипта запуска, отсутствие задержек/циклов во время работы в
+пользовательских драйверах/приложении и локальные ссылки документации. Это проверка
+согласованности, не замена запуску CubeIDE. `check_elf.py` изучает заголовки ARM ELF,
+диапазоны загрузки flash/SRAM, размеры таблиц векторов, точку входа сброса и начальный
+указатель стека.
 
-## Hardware-dependent acceptance
+## Аппаратная приёмка
 
-All physical steps are explicitly pending in
-[HARDWARE_VALIDATION.md](HARDWARE_VALIDATION.md): actual MCU marking, FTDI/JTAG
-connection, flash programming/verification, observed LED colors, button behavior,
-timing, repeated transmissions, debug reset and standalone power-cycle behavior.
-HSI timing tolerance and any university board revision must be evaluated there.
-Historical CubeIDE 1.9.0 under Rosetta on macOS 26.2 is also untested; the
-[installation guide](INSTALLATION.md) distinguishes it from the current native
-IDE route supported by ST's platform documentation.
+В [HARDWARE_VALIDATION.md](HARDWARE_VALIDATION.md) отмечены выполненные операции.
+Полная проверка цветов и последовательностей, измерение времени, повторные
+передачи и самостоятельный запуск после выключения питания ещё остаются.
+Точность HSI и ревизию учебной платы нужно оценить там. Историческая CubeIDE 1.9.0
+под Rosetta на macOS 26.2 тоже не проверена; [руководство установки](INSTALLATION.md)
+отличает её от нативной IDE, поддержка которой описана в документации платформ ST.

@@ -1,37 +1,37 @@
-# Questions to prepare for the defense
+# Вопросы для подготовки к защите
 
-| Question | Concise answer |
+| Вопрос | Краткий ответ |
 |---|---|
-| What does Variant 3 do? | Record completed button presses as dots/dashes, confirm with yellow/red, then reproduce the sequence in green after inactivity. |
-| Why only eight symbols by default? | The updated manual of 23 September 2026, printed p. 77, says up to eight. Capacity is configurable and 64 is also tested. |
-| Which pins are used? | PC15 button; PD13 green; PD14/PD15 the two terminals of the red/yellow LED. |
-| Is the button active high? | No. An external 3 kohm pull-up gives idle high; the switch connects to ground. |
-| Why `GPIO_NOPULL`? | The SDK processor module already has the external pull-up. |
-| How do red and yellow differ electrically? | Yellow: PD14 high, PD15 low. Red: PD14 low, PD15 high. Equal levels turn it off. |
-| Why enable the GPIO clock? | The GPIO peripheral registers need their AHB1 clock for configuration/access. |
-| What are push-pull and open-drain? | Push-pull drives high and low. Open-drain drives low or releases the line, which needs a pull-up for high. LEDs here use push-pull. |
-| Does GPIO output speed set blink speed? | No. It controls edge slew capability. Software timers set the pulse durations. |
-| Why use BSRR? | It sets/resets selected output bits atomically; HAL GPIO writes use it. |
-| Why debounce when there is a capacitor? | Mechanical contacts still need a stable software interpretation; 30 ms unchanged level produces one accepted edge. |
-| How is duration measured? | Subtract timestamps of the first samples of the subsequently confirmed press/release edges. |
-| Exactly 400 ms means what? | Dash. Only durations strictly below 400 ms are dots. |
-| Can playback begin while held? | No. Both a raw candidate press and a stable held press prevent timeout completion. |
-| Why not `HAL_Delay`? | It would stop cooperative event processing; elapsed-time checks return immediately. |
-| What clock is used? | Internal HSI 16 MHz, no PLL, all bus dividers one. SysTick supplies a nominal 1 ms tick. |
-| What happens when the tick wraps? | Unsigned `now - start` still gives the correct elapsed interval across one wrap. |
-| Does `__WFI` busy-wait? | No. It sleeps the core until an interrupt, normally the next SysTick. |
-| What does each driver know? | Button knows electrical level/debounce/events; LED knows color wiring. Only Morse knows dot/dash classification and sequencing. |
-| What if the buffer fills? | Keep the first eight; acknowledge additional releases and restart timeout but do not append them. |
-| What if the user presses during playback? | Discard it. A press held across the end must be released before a fresh one can be accepted. |
-| What if an update is late? | The current interval can become longer. One edge per update preserves visible pulses and gaps. |
-| Why separate F407 and F427 projects? | They have different device definitions, vector tables and memory limits. One binary is not declared interchangeable. |
-| Why preserve five JTAG pins? | The board's FTDI adapter uses JTAG. Reconfiguring those pins can break the debugging connection. |
-| Does the IDE's “ST-LINK (OpenOCD)” label describe the hardware? | No. It selects an IDE backend; the custom OpenOCD script selects the actual FTDI adapter. |
-| What was tested without a board? | Native application/driver tests, sanitizers, GPIO simulation, both MCU builds and linker/vector checks. See the verification report for actual results. |
-| What still needs a board? | FTDI detection, target connection, programming/verify, actual color/timing/button behavior, reset and repeated transmissions. |
+| Что делает вариант 3? | Записывает завершённые нажатия как точки/тире, подтверждает жёлтым/красным, затем после бездействия воспроизводит последовательность зелёным. |
+| Почему по умолчанию только восемь символов? | Обновлённое руководство от 23 сентября 2026 года, печатная с. 77, требует до восьми. Ёмкость настраивается; значение 64 также проверено. |
+| Какие выводы используются? | PC15 — кнопка; PD13 — зелёный; PD14/PD15 — два вывода красно-жёлтого светодиода. |
+| Кнопка активна высоким уровнем? | Нет. Внешняя подтяжка 3 кОм даёт высокий уровень в покое; кнопка замыкает на землю. |
+| Почему `GPIO_NOPULL`? | На процессорном модуле SDK уже есть внешняя подтяжка. |
+| Чем электрически отличаются красный и жёлтый? | Жёлтый: PD14 высокий, PD15 низкий. Красный: PD14 низкий, PD15 высокий. Одинаковые уровни выключают индикатор. |
+| Зачем включать тактирование GPIO? | Регистрам периферии GPIO требуется тактирование AHB1 для настройки и доступа. |
+| Что такое push-pull и open-drain? | Двухтактный выход (push-pull) формирует высокий и низкий уровни. Открытый сток (open-drain) формирует низкий уровень или освобождает линию; для высокого нужна подтяжка. Здесь светодиоды используют push-pull. |
+| Скорость выхода GPIO задаёт скорость мигания? | Нет. Она определяет скорость изменения фронтов. Длительности импульсов задаются программными таймерами. |
+| Зачем BSRR? | Он атомарно устанавливает/сбрасывает выбранные выходные биты; HAL использует его для записи GPIO. |
+| Зачем подавлять дребезг, если есть конденсатор? | Механические контакты всё равно требуют устойчивой программной интерпретации; 30 мс неизменного уровня дают один принятый переход. |
+| Как измеряется длительность? | Вычитанием времён первых отсчётов впоследствии подтверждённых переходов нажатия/отпускания. |
+| Что означает ровно 400 мс? | Тире. Только длительности строго меньше 400 мс считаются точками. |
+| Может ли воспроизведение начаться при удержании? | Нет. И предварительно обнаруженное нажатие, и подтверждённое удержание препятствуют завершению по тайм-ауту. |
+| Почему нельзя `HAL_Delay`? | Он остановил бы кооперативную обработку событий; проверки прошедшего времени возвращают управление сразу. |
+| Какое тактирование используется? | Внутренний HSI 16 МГц, без PLL, все делители шин равны единице. SysTick даёт номинальный тик 1 мс. |
+| Что происходит при переполнении счётчика тиков? | Беззнаковое `now - start` сохраняет правильный прошедший интервал через одно переполнение. |
+| `__WFI` активно ждёт? | Нет. Ядро спит до прерывания, обычно следующего SysTick. |
+| Что знает каждый драйвер? | Кнопка — электрический уровень, дребезг и события; LED — схему цветов. Только Morse знает классификацию точек/тире и последовательность. |
+| Что происходит при заполнении буфера? | Первые восемь сохраняются; дополнительные отпускания подтверждаются и перезапускают тайм-аут, но не добавляются. |
+| Что будет при нажатии во время воспроизведения? | Оно отбрасывается. Нажатие, продолжающееся после окончания воспроизведения, нужно отпустить до нового принимаемого нажатия. |
+| Что будет при запоздалом обновлении? | Текущий интервал может удлиниться. Один переход за обновление сохраняет видимость импульсов и пауз. |
+| Зачем отдельные проекты F407 и F427? | У них разные определения устройства, таблицы векторов и ограничения памяти. Взаимозаменяемость одного бинарного файла не заявляется. |
+| Зачем сохранять пять выводов JTAG? | FTDI-адаптер платы использует JTAG. Перенастройка этих выводов может нарушить отладочное соединение. |
+| Надпись «ST-LINK (OpenOCD)» в IDE описывает аппаратный отладчик? | Нет. Она выбирает механизм запуска IDE; реальный FTDI-адаптер задаёт пользовательский скрипт OpenOCD. |
+| Что проверено без платы? | Нативные тесты приложения/драйверов, санитайзеры, симуляция GPIO, сборки для обоих MCU и проверки компоновки/векторов. Фактические результаты — в отчёте о проверке. |
+| Для чего ещё нужна плата? | Обнаружение FTDI, подключение к MCU, программирование/проверка, реальные цвета, время и кнопка, сброс и повторные передачи. |
 
-Before the demonstration, locate `Morse_Update`, `Button_Update`, `LED_On`,
-`app_config.h`, and the correct linker and OpenOCD scripts. Explain one complete
-dot-dash-dot sequence using the [state diagram](ARCHITECTURE.md#morse-finite-state-machine).
-Run the [demonstration walkthrough](USER_GUIDE.md) with breakpoints disabled.
-Do not describe simulated output as an actual hardware demonstration.
+Перед демонстрацией найдите `Morse_Update`, `Button_Update`, `LED_On`,
+`app_config.h`, нужные скрипты компоновщика и OpenOCD. Объясните полную
+последовательность точка–тире–точка по [диаграмме состояний](ARCHITECTURE.md#конечный-автомат-морзе).
+Выполните [сценарий демонстрации](USER_GUIDE.md) с отключёнными точками останова.
+Не выдавайте симулированный вывод за реальную аппаратную демонстрацию.

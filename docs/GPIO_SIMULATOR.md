@@ -1,93 +1,95 @@
-# GPIO simulator — updated Lab 1, part 2
+# Симулятор GPIO — обновлённая лабораторная 1, часть 2
 
-The September 2026 manual, printed pp. 74–76, offers a register-driver exercise
-or a GPIO hardware simulator. This repository chooses the simulator, keeping
-the MCU firmware on HAL as requested. It is a separate native C program and is
-not linked into either target firmware.
+Руководство от сентября 2026 года, печатные с. 74–76, предлагает упражнение с
+регистровым драйвером или аппаратным симулятором GPIO. В этом репозитории выбран
+симулятор, а прошивка MCU использует HAL согласно заданию. Это отдельная нативная
+программа на C, которая не компонуется ни с одной целевой прошивкой.
 
-Run from the repository root on the Mac:
+Запустите из корня репозитория на Mac:
 
 ```sh
 make test-model
 make simulate
 ```
 
-`test-model` runs seven groups of register/electrical tests. `simulate` compiles
-the actual `button.c`, `led.c` and `morse.c` with a small HAL adapter that reads
-IDR and writes BSRR in `GpioModel`. Output is `build/gpio_trace.csv`; successful
-completion prints that all six green edges were verified. No board or ARM
-compiler is needed.
+`test-model` выполняет семь групп тестов регистров и электрического поведения.
+`simulate` компилирует настоящие `button.c`, `led.c` и `morse.c` с небольшим
+адаптером HAL, читающим IDR и записывающим BSRR в `GpioModel`. Результат —
+`build/gpio_trace.csv`; при успехе выводится сообщение о проверке всех шести
+переходов зелёного. Плата и ARM-компилятор не нужны.
 
-## Modeled interface
+## Моделируемый интерфейс
 
-`simulator/gpio_model.h` exposes aligned 32-bit register accesses at RM0090
-offsets. Use `GpioModel_Write/Read`, rather than directly editing `reg`, to retain
-read-only/write-only and configuration-lock behavior.
+`simulator/gpio_model.h` предоставляет выровненный 32-битный доступ к регистрам по
+смещениям RM0090. Используйте `GpioModel_Write/Read`, а не прямое изменение `reg`,
+чтобы сохранять поведение регистров только для чтения/записи и блокировки настройки.
 
-| Offset | Register | Modeled behavior |
+| Смещение | Регистр | Моделируемое поведение |
 |---|---|---|
-| 0x00 | MODER | Input, output, alternate or analog mode per pin |
-| 0x04 | OTYPER | Push-pull drive or open-drain low/released |
-| 0x08 | OSPEEDR | Stored configuration, including lock behavior |
-| 0x0C | PUPDR | Internal pulls in digital modes; disabled in analog |
-| 0x10 | IDR | Read-only resolved pin levels; analog input buffer reads zero |
-| 0x14 | ODR | 16-bit output latch |
-| 0x18 | BSRR | Atomic low-half set / high-half reset; set wins if both selected; reads zero |
-| 0x1C | LCKR | 1/0/1 key sequence with unchanged pin mask, then read; freezes selected configuration fields until reset |
-| 0x20/0x24 | AFRL/AFRH | Select an externally supplied AF source per pin |
+| 0x00 | MODER | Вход, выход, альтернативный или аналоговый режим каждого вывода |
+| 0x04 | OTYPER | Двухтактный выход или открытый сток: низкий уровень/освобождение |
+| 0x08 | OSPEEDR | Сохранение настройки, включая блокировку |
+| 0x0C | PUPDR | Внутренние подтяжки в цифровых режимах; отключены в аналоговом |
+| 0x10 | IDR | Только чтение результирующих уровней; в аналоговом режиме входной буфер читается как ноль |
+| 0x14 | ODR | 16-битная выходная защёлка |
+| 0x18 | BSRR | Атомарная установка младшей половиной / сброс старшей; при одновременном выборе побеждает установка; чтение даёт ноль |
+| 0x1C | LCKR | Последовательность ключа 1/0/1 с неизменной маской выводов, затем чтение; фиксирует выбранные поля настройки до сброса |
+| 0x20/0x24 | AFRL/AFRH | Выбор внешнего источника альтернативной функции для каждого вывода |
 
-Port A/B reset defaults preserve the debug pin configuration specified by
-[RM0090 Rev 21, chapter 8](https://www.stmcu.jp/wp/wp-content/uploads/2017/08/RM0090_Rev21.pdf);
-other modeled ports start with zero configuration. Reserved bits in the 16-bit
-ODR/OTYPER are masked. IDR writes and unaligned/out-of-range writes return false.
-The lock leaves ODR/BSRR writable, matching the distinction between configuration
-and output data.
+Значения портов A/B после сброса сохраняют конфигурацию отладочных выводов из
+[RM0090 Rev 21, глава 8](https://www.stmcu.jp/wp/wp-content/uploads/2017/08/RM0090_Rev21.pdf);
+остальные моделируемые порты начинают с нулевой настройки. Зарезервированные биты
+16-битных ODR/OTYPER маскируются. Запись в IDR и невыровненная запись или запись
+за пределами диапазона возвращают false. Блокировка оставляет ODR/BSRR доступными
+для записи, отражая различие между конфигурацией и выходными данными.
 
-`GpioModel_Drive` supplies external strong levels or high impedance, and
-`GpioModel_Pulls` supplies external resistors. `GpioModel_Alternate` supplies an
-AF signal without simulating the whole peripheral. `GpioModel_Pads` resolves
-output, external drive and pulls. Strong drive overrides pulls; the modeled
-external resistor overrides the weaker internal pull. Opposing strong drivers
-set the contention mask and produce a deterministic zero. Undriven pins without
-pulls set the floating mask and produce zero. Neither zero is a prediction of
-an actual floating or electrically contended voltage.
+`GpioModel_Drive` задаёт внешние сильные уровни или высокоимпедансное состояние,
+`GpioModel_Pulls` — внешние резисторы. `GpioModel_Alternate` задаёт сигнал
+альтернативной функции без моделирования всей периферии. `GpioModel_Pads`
+определяет итоговые уровни с учётом выхода, внешнего источника и подтяжек.
+Сильный источник преобладает над подтяжкой; моделируемый внешний резистор — над
+более слабой внутренней подтяжкой. Противоположные сильные источники устанавливают
+маску конфликта и дают детерминированный ноль. Выводы без источника и подтяжки
+устанавливают маску плавающих входов и дают ноль. Ни один из этих нулей не является
+прогнозом реального напряжения на плавающей линии или при конфликте источников.
 
-## Demonstration trace
+## Демонстрационная трасса
 
-The scripted physical button edges occur at 100/200 ms (dot), 400/900 ms (dash),
-and 1100/1200 ms (dot). Release confirmation occurs 30 ms later. The adapter
-models the external PC15 pull-up and the antiparallel LED truth table.
+Заданные сценарием физические переходы кнопки происходят в 100/200 мс (точка),
+400/900 мс (тире) и 1100/1200 мс (точка). Отпускание подтверждается спустя 30 мс.
+Адаптер моделирует внешнюю подтяжку PC15 и таблицу истинности встречно-параллельного LED.
 
-| Time, ms | Checked result |
+| Время, мс | Проверяемый результат |
 |---:|---|
-| 230 | Yellow confirmation |
-| 930 | Red confirmation |
-| 1230 | Yellow confirmation; final debounced release |
-| 2730 | Green on: first dot |
-| 2930 | Green off: first gap |
-| 3130 | Green on: dash |
-| 3730 | Green off: second gap |
-| 3930 | Green on: last dot |
-| 4130 | Green off; IDLE |
+| 230 | Жёлтое подтверждение |
+| 930 | Красное подтверждение |
+| 1230 | Жёлтое подтверждение; последнее подтверждённое отпускание |
+| 2730 | Зелёный включён: первая точка |
+| 2930 | Зелёный выключен: первая пауза |
+| 3130 | Зелёный включён: тире |
+| 3730 | Зелёный выключен: вторая пауза |
+| 3930 | Зелёный включён: последняя точка |
+| 4130 | Зелёный выключен; IDLE |
 
-CSV columns are `ms,operation,port,offset,value,pads,green,red,yellow,state,length`.
-State values are 0 IDLE, 1 INPUT, 2 PLAYBACK. Rows include register reads/writes,
-external button changes and explicit green edges. The assertion checks use the
-resolved pads; the trace also exposes intermediate individual HAL writes.
-Change the `inputs` schedule in `simulator/morse_demo.c` for experiments and
-update the expected-edge assertions for the new scenario.
+Столбцы CSV: `ms,operation,port,offset,value,pads,green,red,yellow,state,length`.
+Значения состояния: 0 IDLE, 1 INPUT, 2 PLAYBACK. Строки включают чтения/записи
+регистров, внешние изменения кнопки и явные переходы зелёного. Проверочные
+утверждения используют итоговые уровни выводов; трасса также показывает
+промежуточные отдельные записи HAL. Для экспериментов меняйте расписание `inputs`
+в `simulator/morse_demo.c` и обновляйте проверки ожидаемых переходов под новый сценарий.
 
-## Scope and limits
+## Область применения и ограничения
 
-This is a deterministic digital peripheral model with a scheduled environment,
-not a full STM32 instruction-set or circuit emulator. It does not simulate RCC
-clock gating, bus latency, analog voltages, contact physics, RC settling, current,
-output slew from OSPEEDR, peripheral internals, bit-band aliases or byte/halfword
-bus accesses. For invalid pull encodings and competing external pulls its simple
-resolution is defined by the code, not an electrical guarantee. Configuration
-lock acceptance is modeled through the documented word-access key sequence.
+Это детерминированная цифровая модель периферии с заданным расписанием окружения,
+а не полный эмулятор команд STM32 или электрической схемы. Она не моделирует
+управление тактированием RCC, задержки шины, аналоговые напряжения, физику
+контактов, установление RC-цепи, ток, скорость фронтов OSPEEDR, внутреннюю работу
+периферии, bit-band-алиасы или байтовый/полусловный доступ к шине. Для неверных
+кодировок подтяжки и конкурирующих внешних подтяжек упрощённый результат определяется
+кодом, а не электрической гарантией. Блокировка конфигурации моделируется через
+документированную последовательность ключа с доступом словами.
 
-The demo explicitly initializes the modeled registers to the firmware's settings;
-it does not execute `MX_GPIO_Init()` or ST's binary HAL. The native unit tests,
-source/configuration audit and real ARM build complement this boundary. None
-of these replace [physical validation](HARDWARE_VALIDATION.md).
+Демонстрация явно инициализирует моделируемые регистры настройками прошивки;
+она не выполняет `MX_GPIO_Init()` или бинарный HAL ST. Нативные модульные тесты,
+аудит исходников/конфигурации и реальная ARM-сборка дополняют эту границу.
+Ни одна из проверок не заменяет [физическую проверку](HARDWARE_VALIDATION.md).

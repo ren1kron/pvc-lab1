@@ -1,43 +1,58 @@
-# Physical validation checklist — not yet executed
+# Чек-лист проверки на физическом стенде
 
-All boxes below intentionally remain unchecked. Record the actual board, date
-and results during a university lab session. Automated checks are recorded
-separately in [VERIFICATION.md](VERIFICATION.md).
+12 октября 2026 года выполнены подключение, прошивка и проверка запуска на стенде
+F427. Отмечены только подтверждённые операции. Остальные наблюдения и измерения
+нужно выполнить отдельно. Автоматизированные проверки описаны в
+[VERIFICATION.md](VERIFICATION.md).
 
-Board/module marking: __________  MCU top marking: __________
+Модуль: F427 со слов пользователя. Маркировка корпуса визуально не проверялась.
+DBGMCU_IDCODE: `0x20016419`; flash: 2048 КиБ; JTAG CPU: `0x4ba00477`.
 
-Date/operator: __________  IDE/OpenOCD version: __________
+Дата: 12 октября 2026 года. CubeIDE 2.2.0; xPack OpenOCD 0.12.0-7.
 
-Firmware target/configuration and Git commit: __________
+Загружена Make-сборка `build/F427/Debug/Lab1_F427.elf`, F427/Debug,
+исходники приложения из коммита `448c92a`. Исправлен скрипт OpenOCD для этого стенда.
+SHA-256 ELF: `dbe0aebb5f2441a51285fd2579b42318ed1b966032d28577fb46adda79e5c21c`.
 
-- [ ] Identify STM32F407VGT6 or STM32F427VIT6 before selecting its ELF/script.
-- [ ] Connect a data cable to DBG USB; verify the expected power/VTGT indication.
-- [ ] Confirm the FTDI device is visible in macOS System Information → USB.
-- [ ] Import the supplied project in CubeIDE and build Debug without reconstruction.
-- [ ] Connect through FTDI/JTAG; record actual target identification and flash size.
-- [ ] Program and verify the matching firmware; Resume after the breakpoint at main.
-- [ ] Confirm idle LEDs turn off after initialization.
-- [ ] A roughly 100–200 ms press produces one yellow confirmation.
-- [ ] A roughly 600–800 ms press produces one red confirmation.
-- [ ] Dot-dash-dot reproduces in green as 200/600/200 ms pulses with 200 ms gaps.
-- [ ] Playback starts about 1.53 s after the physical final release (30 ms debounce plus 1500 ms).
-- [ ] Holding the button longer than the timeout does not start playback early.
-- [ ] Several taps each produce exactly one symbol; ordinary bounce adds none.
-- [ ] Eight symbols are preserved in order; a ninth adds feedback but is not stored.
-- [ ] A press completed during playback does not enter the next sequence.
-- [ ] A press held across playback's end is ignored through its release.
-- [ ] A fresh press immediately after playback works normally.
-- [ ] Repeat multiple different sequences and confirm no automatic retransmission.
-- [ ] Reset while idle/input/playback; application restarts cleanly.
-- [ ] Power-cycle and verify standalone execution without a debugger session.
-- [ ] Break at a state transition, inspect variables, remove the breakpoint and Resume.
-- [ ] Terminate the debugger and disconnect safely.
+- [x] Выбрать F427 по сообщению пользователя; подтвердить через JTAG семейство F42x/F43x и flash 2048 КиБ.
+- [ ] Подключить кабель с передачей данных к DBG USB; проверить питание/индикатор VTGT.
+- [x] Подтвердить через `ioreg` устройство SDK 1.1M Debugger, USB `0403:6010`.
+- [x] Импортировать готовый проект и собрать Debug через headless-сборщик CubeIDE 2.2.0: 0 ошибок, 0 предупреждений.
+- [x] Подключиться через FTDI/JTAG; записать идентификатор MCU и размер flash.
+- [x] Запрограммировать Make-сборку, получить `Verified OK`, выполнить reset/run и оставить процессор работающим.
+- [ ] Убедиться, что после инициализации в ожидании ввода светодиоды выключены.
+- [x] Пользователь подтвердил: короткое нажатие даёт жёлтую вспышку, затем зелёный импульс после паузы; точное время не измерялось.
+- [ ] Нажатие примерно на 600–800 мс даёт одно красное подтверждение.
+- [ ] Точка–тире–точка воспроизводится зелёным: импульсы 200/600/200 мс, паузы 200 мс.
+- [ ] Воспроизведение начинается примерно через 1,53 с после физического отпускания кнопки (30 мс подавления дребезга плюс 1500 мс).
+- [ ] Удержание кнопки дольше тайм-аута не запускает воспроизведение раньше времени.
+- [ ] Несколько нажатий дают ровно по одному символу; обычный дребезг не добавляет символов.
+- [ ] Восемь символов сохраняются по порядку; девятый даёт подтверждение, но не сохраняется.
+- [ ] Нажатие, завершённое во время воспроизведения, не попадает в следующую последовательность.
+- [ ] Нажатие, продолжающееся после окончания воспроизведения, игнорируется вплоть до отпускания.
+- [ ] Новое нажатие сразу после воспроизведения обрабатывается нормально.
+- [ ] Повторить несколько разных последовательностей и убедиться в отсутствии автоматической повторной передачи.
+- [ ] Выполнить сброс в ожидании, при вводе и при воспроизведении; приложение перезапускается корректно.
+- [ ] Выключить и включить питание, проверить самостоятельную работу без отладочного сеанса.
+- [ ] Остановиться на переходе состояния, изучить переменные, убрать точку останова и нажать Resume.
+- [ ] Завершить работу отладчика и безопасно отключить плату.
 
-If timing accuracy is required, capture PD13 with an oscilloscope/logic analyzer
-using the board's permitted measurement connections and common ground. Record
-measured values and instrument settings; nominal software milliseconds are not
-a measurement. Confirm the actual red/yellow colors against the board revision.
-Use [TROUBLESHOOTING.md](TROUBLESHOOTING.md) for failures. Do not attempt mass erase,
-option-byte changes or protection removal as an automatic recovery step.
+Если нужна оценка точности времени, снимите сигнал PD13 осциллографом или
+логическим анализатором через разрешённые измерительные подключения платы с общей
+землёй. Запишите измеренные значения и настройки прибора; номинальные программные
+миллисекунды не являются измерением. Сверьте реальные красный/жёлтый цвета с
+ревизией платы. При сбоях используйте [TROUBLESHOOTING.md](TROUBLESHOOTING.md).
+Массовое стирание, изменение option bytes и снятие защиты не являются
+автоматическими шагами восстановления.
 
-Observed results/issues: __________
+Подтверждено отладчиком: `SystemCoreClock = 16000000`, `uwTick` вырос с 457 до 762
+между остановками с возобновлением выполнения; PC находился в основном цикле
+(`0x08000584`). `GPIOC_MODER = 0`, `GPIOD_MODER = 0x54000000`,
+`GPIOD_ODR = 0`. Нулевой регистр выхода не заменяет визуальную проверку светодиодов.
+
+Обнаруженная проблема: стандартный `stm32f4x.cfg` поднимает JTAG до 8 МГц в
+`reset-init`; прошивка завершалась `Invalid ACK (6)`. В скрипте F427 переопределены
+`reset-start` и `reset-init`: JTAG остаётся 100 кГц, MCU — на HSI после сброса.
+После этого программирование и проверка прошли успешно. Предупреждение
+`libusb_detach_kernel_driver() failed with LIBUSB_ERROR_ACCESS` не помешало
+успешному обмену; драйверы ОС не изменялись.

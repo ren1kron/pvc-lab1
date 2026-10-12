@@ -1,74 +1,83 @@
-# Laboratory 1 Variant 3 implementation plan
+# План реализации лабораторной 1, вариант 3
 
-Goal: an independently buildable HAL firmware and student guide for SDK-1.1MC.407
-and SDK-1.1MC.427, plus native C tests and the 2026 GPIO simulation exercise.
-Spec: the user's full assignment and the supplied `lab_task_text.pdf`, revision
-23 September 2026, section 5.1. The user explicitly requests uninterrupted execution.
+Цель: независимо собираемая HAL-прошивка и руководство для студента по
+SDK-1.1MC.407 и SDK-1.1MC.427, а также нативные C-тесты и упражнение по симуляции GPIO
+из руководства 2026 года. Требования: полное задание пользователя и выданный
+`lab_task_text.pdf`, редакция от 23 сентября 2026 года, раздел 5.1. Пользователь
+явно просит непрерывное выполнение работы.
 
-Design decisions:
-- Primary CubeIDE project `firmware` (F407VG); companion `firmware-f427` (F427VI)
-  links common Core and Drivers directories using relative Eclipse links.
-- Each project owns its .ioc, startup, linker, project metadata and launch file.
-- HSI 16 MHz, all bus dividers 1, SysTick 1 ms, no PLL, HSE or LSE.
-- PC15 input, no internal pull (external 3 kohm pull-up); PD13/14/15 push-pull low
-  speed. Preserve all five JTAG pins. Actual LED polarity follows the schematic:
-  green PD13 high; yellow PD14 high/PD15 low; red PD14 low/PD15 high.
-- Generic LED and debounced button drivers. Application has IDLE/INPUT/PLAYBACK.
-- 30 ms stable-edge debounce; threshold 400 ms; 200/600 ms green pulses;
-  200 ms gaps; 1500 ms inactivity; 150 ms feedback. Default capacity 8 as required
-  by the updated manual; configurable through 64 and beyond within a safe limit.
-- Reject extra symbols, preserve first entries, restart inactivity on any release.
-- Suppress playback input including a press spanning its end; require a stable
-  release before accepting a new press. Boot with a held button behaves likewise.
-- unsigned elapsed subtraction; schedule from actual LED transitions to preserve
-  visible pulse/gap lengths when a polling call is late.
-- No dynamic allocation, UART, display, I2C, EXTI or extra hardware timers.
+Проектные решения:
 
-## Tasks (execute in order)
+- Основной проект CubeIDE `firmware` (F407VG); дополнительный `firmware-f427` (F427VI)
+  подключает общие Core и Drivers относительными ссылками Eclipse.
+- Каждый проект имеет собственные .ioc, startup, скрипт компоновщика, метаданные и файл запуска.
+- HSI 16 МГц, все делители шин 1, SysTick 1 мс, без PLL, HSE и LSE.
+- PC15 — вход без внутренней подтяжки (внешняя 3 кОм); PD13/14/15 — двухтактные
+  выходы низкой скорости. Сохранены все пять выводов JTAG. Полярность LED по схеме:
+  зелёный — высокий PD13; жёлтый — высокий PD14/низкий PD15; красный — наоборот.
+- Универсальные драйверы LED и кнопки с подавлением дребезга. Состояния приложения:
+  IDLE/INPUT/PLAYBACK.
+- Подавление дребезга: 30 мс стабильного уровня; порог 400 мс; зелёные импульсы
+  200/600 мс; паузы 200 мс; бездействие 1500 мс; подтверждение 150 мс. Ёмкость по
+  умолчанию 8 по обновлённому руководству; настраивается до 64 и выше в безопасных пределах.
+- Лишние символы отклоняются, первые сохраняются, любое отпускание перезапускает таймер бездействия.
+- Ввод при воспроизведении подавляется, включая нажатие, продолжающееся после его
+  окончания; перед новым нажатием нужно стабильное отпускание. То же при запуске
+  с удерживаемой кнопкой.
+- Беззнаковое вычитание прошедшего времени; отсчёт от фактических переходов LED
+  сохраняет видимую длительность импульсов/пауз при запоздалом опросе.
+- Нет динамической памяти, UART, дисплея, I2C, EXTI и дополнительных аппаратных таймеров.
 
-- [x] 1. Research: read both manuals, schematic, examples, ST manuals and tools.
-  Record sources, contradictions, exact vendor versions and host limitations.
-- [x] 2. Build foundation: vendor the minimal STM32CubeF4 1.27.1 HAL/CMSIS subset,
-  retain licenses and hashes; initialize GPIO/clocks and startup; supply two IDE
-  configurations and portable Make build. Build both empty firmware targets.
-- [x] 3. Drivers: write native failing tests for electrical LED truth table,
-  active-low button, 30 ms stable debounce, durations, repeated get, held startup,
-  rollover. Implement `LED_On/Off/AllOff`, `Button_Init/Update/GetEvent`,
-  `Button_IsActive`, `Button_SuppressUntilReleased`, then make tests pass.
-- [x] 4. Morse: write failing tests for dot/dash boundaries, order, feedback,
-  timeout/held button, exact pulse/gap boundaries, buffer capacity, repeated
-  sequences, rollover, and playback input spanning completion. Implement the FSM
-  and run the complete suite using the real drivers with a fake HAL boundary.
-- [x] 5. New manual part 2: implement and test a standalone digital GPIO register
-  model (MODER, OTYPER, OSPEEDR, PUPDR, IDR, ODR, BSRR, LCKR, AFR), externally
-  scheduled inputs and a CSV trace using the actual Morse application.
-- [x] 6. Documentation: installation, hardware, import/build/flash, usage,
-  troubleshooting, architecture, defense, research and explicit hardware checklist.
-- [x] 7. Final audit: host tests + sanitizers, both ARM builds, linker/vector/memory
-  checks, dependency hashes, relative paths, no runtime delays, metadata checks,
-  independent code review, Git commit and clean-state check.
+## Задачи (выполнять по порядку)
 
-## Review focus
+- [x] 1. Исследование: изучить оба руководства, схему, примеры, руководства ST и
+  инструменты. Записать источники, противоречия, точные версии поставщиков и ограничения компьютера.
+- [x] 2. Основа сборки: включить минимальный набор HAL/CMSIS STM32CubeF4 1.27.1,
+  сохранить лицензии и хеши; инициализировать GPIO, тактирование и запуск; предоставить
+  две конфигурации IDE и переносимую Make-сборку. Собрать обе пустые прошивки.
+- [x] 3. Драйверы: написать падающие нативные тесты таблицы истинности LED, кнопки
+  с активным низким уровнем, 30 мс стабильности, длительностей, повторного получения,
+  удержания при запуске и переполнения тиков. Реализовать `LED_On/Off/AllOff`,
+  `Button_Init/Update/GetEvent`, `Button_IsActive`, `Button_SuppressUntilReleased`,
+  затем добиться прохождения тестов.
+- [x] 4. Морзе: написать падающие тесты границ точки/тире, порядка, подтверждения,
+  тайм-аута/удержания, точных границ импульсов/пауз, ёмкости, повторных
+  последовательностей, переполнения и ввода через окончание воспроизведения.
+  Реализовать автомат и выполнить весь набор с реальными драйверами и подменой HAL.
+- [x] 5. Часть 2 нового руководства: реализовать и проверить отдельную цифровую
+  регистровую модель GPIO (MODER, OTYPER, OSPEEDR, PUPDR, IDR, ODR, BSRR, LCKR, AFR),
+  внешние входы по расписанию и CSV-трассу с настоящим приложением Морзе.
+- [x] 6. Документация: установка, оборудование, импорт/сборка/прошивка, использование,
+  неполадки, архитектура, защита, исследование и явный аппаратный чек-лист.
+- [x] 7. Итоговый аудит: тесты на компьютере и санитайзеры, обе ARM-сборки, проверки
+  компоновки/векторов/памяти, хеши зависимостей, относительные пути, отсутствие
+  задержек во время работы, метаданные, независимое ревью, Git-коммит и чистое состояние.
 
-Electrical color reversal; input starting just before timeout; held button crossing
-playback end; large tick rollover; shared project paths and per-target vector tables.
+## На что обратить внимание при ревью
 
-## Execution record
+Перестановка цветов электрической схемы; ввод непосредственно перед тайм-аутом;
+кнопка, удерживаемая через конец воспроизведения; переполнение тиков; общие пути
+проектов и отдельные таблицы векторов каждого MCU.
 
-Research confirmed updated manual identity by SHA-256 against Yandex public API.
-The blank workspace has no existing Git history; work proceeds in the requested
-directory. No worktree is needed to isolate an existing implementation.
+## Запись о выполнении
 
-Both complete MCU projects now compile in Debug and Release. All 18 application
-tests, 7 model groups, sanitizer runs and the capacity-64 suite pass. A register
-simulation checks dot-dash-dot including all six green edges. A firmware review
-found a fresh-press rearming defect at playback completion; a failing regression
-test preceded the fix. The modern OpenOCD configuration also now explicitly
-applies stock OpenOCD's documented connect-under-reset flags.
+Исследование подтвердило идентичность обновлённого руководства по SHA-256 через
+публичный API Яндекса. В пустом workspace не было истории Git; работа велась в
+заданном каталоге. Worktree для изоляции существующей реализации не требовался.
 
-Documentation covers the actual delivered files and distinguishes the verified
-native ARM toolchain from unexecuted CubeIDE GUI/physical hardware work. A clean
-relocated copy with spaces in its path passed the full offline verification.
-The compiler installer's cached archive/checksum/extraction path also passed.
-The workspace protects its `.git` path; a permitted temporary repository holds
-the commit used for delivery as a Git bundle and a repository archive.
+Оба полных MCU-проекта теперь собираются в Debug и Release. Проходят все 18 тестов
+приложения, 7 групп модели, санитайзеры и набор с ёмкостью 64. Регистровая симуляция
+проверяет точка–тире–точка, включая все шесть переходов зелёного. Ревью прошивки
+обнаружило дефект возобновления приёма нового нажатия после воспроизведения;
+исправлению предшествовал падающий регрессионный тест. Современная конфигурация
+OpenOCD теперь также явно применяет документированные флаги подключения под
+сбросом стандартного OpenOCD.
+
+Документация описывает фактически поставленные файлы и отделяет проверенный
+нативный ARM-инструментарий от действий в GUI CubeIDE и на плате, которые на этапе
+первоначальной разработки ещё не выполнялись. Позднейший запуск F427 на стенде
+зафиксирован в [HARDWARE_VALIDATION.md](HARDWARE_VALIDATION.md).
+Чистая перенесённая копия с пробелами в пути прошла полную автономную проверку.
+Также проверены кэшированный архив, контрольная сумма и распаковка установщика
+компилятора. Workspace защищает путь `.git`; разрешённый временный репозиторий
+содержит коммит, использованный для поставки Git bundle и архива репозитория.

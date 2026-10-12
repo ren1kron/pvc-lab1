@@ -7,9 +7,10 @@ plays the sequence once after 1.5 seconds of inactivity. All runtime drivers and
 application updates are non-blocking. There is no UART, display, keypad, RTOS,
 EXTI or additional timer configuration.
 
-**Ready for physical validation; not yet flashed or tested on university hardware.**
-The ARM builds and native tests are verified; the CubeIDE GUI itself was not
-available on the development machine. See [verification evidence](docs/VERIFICATION.md).
+**F427 flashed, verified and running on the SDK-1.1M (12 October 2026).**
+The user confirmed yellow feedback and green playback for a short press.
+The CubeIDE 2.2.0 headless Debug build also passed; full hardware acceptance
+remains in the [verification evidence](docs/VERIFICATION.md).
 
 ## Two important findings from the official materials
 
@@ -28,7 +29,9 @@ Full source comparison and page references: [RESEARCH.md](docs/RESEARCH.md).
 
 ## Start here
 
-For a first session, follow [INSTALLATION.md](docs/INSTALLATION.md), then
+For an introduction to the project and how it works, read the
+[beginner's project guide](docs/PROJECT_GUIDE.md). For a first session, follow
+[INSTALLATION.md](docs/INSTALLATION.md), then
 [HARDWARE_SETUP.md](docs/HARDWARE_SETUP.md), [BUILD_AND_FLASH.md](docs/BUILD_AND_FLASH.md)
 and the exact [demonstration walkthrough](docs/USER_GUIDE.md).
 

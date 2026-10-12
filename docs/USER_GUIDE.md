@@ -1,66 +1,74 @@
-# Demonstrate Variant 3
+# Демонстрация варианта 3
 
-Use the side-panel user button beside the module LEDs. The front-panel RESET
-button restarts the program; the matrix keys are unused.
+Используйте пользовательскую кнопку на боковой панели рядом со светодиодами
+модуля. Кнопка RESET на передней панели перезапускает программу; клавиши матрицы
+не используются.
 
-1. Flash the correct target, Resume execution, then press **RESET**. Release the
-   user button. The three controlled colors settle off after initialization.
-2. Press the user button for about **0.1–0.2 s**, then release. After its 30 ms
-   release debounce, **yellow flashes for 150 ms**: a dot was detected.
-3. Wait about **0.3 s**, then press for about **0.6 s** and release.
-   **Red flashes for 150 ms**: a dash was detected. A duration of exactly 400 ms
-   belongs to the dash class, so avoid that boundary during demonstration.
-4. Wait about **0.3 s**, then press for about **0.1–0.2 s** and release.
-   Observe another **yellow** flash. Keep gaps between entered symbols well below
-   1.5 seconds; holding a press does not trigger completion.
-5. Stop touching the button. **1.5 s after the final debounced release** the green
-   indicator begins. Relative to physical release this is approximately **1.53 s**.
-6. Observe this timeline, starting at the first green rising edge:
+1. Прошейте правильный MCU, возобновите выполнение (Resume), затем нажмите
+   **RESET**. Отпустите пользовательскую кнопку. После инициализации все три
+   управляемых цвета должны погаснуть.
+2. Нажмите пользовательскую кнопку примерно на **0,1–0,2 с**, затем отпустите.
+   После 30 мс подавления дребезга отпускания **жёлтый вспыхнет на 150 мс**:
+   распознана точка.
+3. Подождите примерно **0,3 с**, затем нажмите на **0,6 с** и отпустите.
+   **Красный вспыхнет на 150 мс**: распознано тире. Длительность ровно 400 мс
+   относится к тире, поэтому при демонстрации избегайте этой границы.
+4. Подождите примерно **0,3 с**, затем нажмите на **0,1–0,2 с** и отпустите.
+   Наблюдайте ещё одну **жёлтую** вспышку. Паузы между вводимыми символами должны
+   быть заметно короче 1,5 с; удержание кнопки не завершает ввод.
+5. Не трогайте кнопку. **Через 1,5 с после последнего подтверждённого отпускания**
+   начнёт работать зелёный индикатор. От физического отпускания проходит около
+   **1,53 с**.
+6. Наблюдайте следующую временную последовательность от первого включения зелёного:
 
-   | Time | Green LED |
+   | Время | Зелёный светодиод |
    |---|---|
-   | 0–200 ms | On: dot |
-   | 200–400 ms | Off: gap |
-   | 400–1000 ms | On: dash |
-   | 1000–1200 ms | Off: gap |
-   | 1200–1400 ms | On: dot |
-   | At 1400 ms | Off; ready for the next sequence |
+   | 0–200 мс | Включён: точка |
+   | 200–400 мс | Выключен: пауза |
+   | 400–1000 мс | Включён: тире |
+   | 1000–1200 мс | Выключен: пауза |
+   | 1200–1400 мс | Включён: точка |
+   | В 1400 мс | Выключен; готов к следующей последовательности |
 
-7. Enter a second sequence, such as two dashes, and observe another single
-   playback. No reset is needed between sequences.
+7. Введите вторую последовательность, например два тире, и наблюдайте ещё одно
+   однократное воспроизведение. Между последовательностями сброс не нужен.
 
-The assignment transmits entered **symbols**, not decoded letters. There is no
-UART text output, alphabet conversion, word separator or separate Send button.
+Задание передаёт введённые **символы**, а не декодированные буквы. Текстового вывода
+через UART, преобразования в алфавит, разделителя слов и отдельной кнопки отправки нет.
 
-## Edge cases to explain to the instructor
+## Граничные случаи для объяснения преподавателю
 
-- A press shorter than the 30 ms stable debounce requirement is treated as noise.
-- Press duration is measured between the first samples of the finally stable
-  press/release levels; debounce does not add 30 ms to one end only.
-- While the button is held, playback waits. Yellow/red feedback expiry continues
-  to work while another press is held, proving updates are independent.
-- The first **eight** completed presses are stored (updated 2026 requirement).
-  Further releases still flash their detected color, but are not stored. Stop
-  input normally; the first eight play in order after the usual timeout.
-- Presses during playback are ignored. If held across its end, release and press
-  again. A genuinely new press after playback is accepted immediately.
-- A button held while resetting is ignored until released; this avoids a phantom
-  first symbol at boot.
-- A quick new confirmation replaces the current flash and restarts its 150 ms
-  duration. For distinct visible confirmations leave about 0.3 s between presses.
-- Settings are in `app_config.h`; thresholds are engineering choices. The ratio
-  of dash to dot playback is 3:1. The exact physical durations depend on HSI
-  accuracy and polling latency and must be checked on the actual board.
+- Нажатие короче требуемых 30 мс стабильного уровня считается помехой.
+- Длительность измеряется между первыми отсчётами окончательно стабилизировавшихся
+  уровней нажатия и отпускания; подавление дребезга не добавляет 30 мс только к
+  одному из концов интервала.
+- Пока кнопка удерживается, воспроизведение ждёт. Истечение жёлтого/красного
+  подтверждения обрабатывается и во время другого удерживаемого нажатия, что
+  показывает независимость обновлений.
+- Сохраняются первые **восемь** завершённых нажатий (обновлённое требование 2026 года).
+  Последующие отпускания всё равно подтверждаются соответствующим цветом, но
+  не сохраняются. После обычного завершения ввода первые восемь воспроизводятся
+  по порядку с обычным тайм-аутом.
+- Нажатия во время воспроизведения игнорируются. Если кнопка удерживается после
+  его окончания, отпустите её и нажмите снова. Новое нажатие после воспроизведения
+  принимается сразу.
+- Кнопка, удерживаемая при сбросе, игнорируется до отпускания: это исключает
+  ложный первый символ при запуске.
+- Быстрое новое подтверждение заменяет текущую вспышку и начинает её 150 мс заново.
+  Чтобы вспышки были различимы, оставляйте около 0,3 с между нажатиями.
+- Настройки находятся в `app_config.h`; пороги выбраны как инженерные параметры.
+  Отношение длительности тире к точке при воспроизведении — 3:1. Реальные
+  длительности зависят от точности HSI и задержки опроса; их нужно проверить на плате.
 
-## Expected evidence for the laboratory
+## Что показать на лабораторной
 
-Before asking for a demonstration, have the program loaded and running. Show the
-dot-dash-dot behavior, repeatability, and your source modules. Explain the state
-diagram in [ARCHITECTURE.md](ARCHITECTURE.md). For the new manual's GPIO study,
-run `make test-model` and `make simulate`, then inspect `build/gpio_trace.csv` using
+До приглашения преподавателя загрузите и запустите программу. Покажите поведение
+точка–тире–точка, повторяемость и исходные модули. Объясните диаграмму состояний в
+[ARCHITECTURE.md](ARCHITECTURE.md). Для изучения GPIO по новому руководству выполните
+`make test-model` и `make simulate`, затем изучите `build/gpio_trace.csv` по
 [GPIO_SIMULATOR.md](GPIO_SIMULATOR.md).
 
-Record **actual** observations only after performing the hardware experiment.
-The supplied verification report contains host/build evidence, not fabricated
-laboratory results. Use [HARDWARE_VALIDATION.md](HARDWARE_VALIDATION.md) to record
-the remaining checks.
+Записывайте **фактические** наблюдения только после аппаратного эксперимента.
+Готовый отчёт о проверке содержит результаты на компьютере и результаты сборки,
+а не вымышленные лабораторные наблюдения. Оставшиеся проверки фиксируйте в
+[HARDWARE_VALIDATION.md](HARDWARE_VALIDATION.md).
