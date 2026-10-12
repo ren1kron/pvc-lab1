@@ -8,7 +8,8 @@ application updates are non-blocking. There is no UART, display, keypad, RTOS,
 EXTI or additional timer configuration.
 
 **F427 flashed, verified and running on the SDK-1.1M (12 October 2026).**
-The user confirmed yellow feedback and green playback for a short press.
+The user confirmed the yellow/red/yellow feedback for a dot–dash–dot input and
+the subsequent green playback.
 The CubeIDE 2.2.0 headless Debug build also passed; full hardware acceptance
 remains in the [verification evidence](docs/VERIFICATION.md).
 
